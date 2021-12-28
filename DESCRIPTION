@@ -9,3 +9,16 @@ Description: Shiny application to plot genes and genesets from a Summarized Expe
 License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.1.2
+Imports:
+  shiny,
+  shinydashboard,
+  shinyjqui,
+  waiter,
+  shinycssloaders,
+  plotly,
+  shinyjs,
+  DT,
+  ggplot2,
+  SummarizedExperiment,
+  SEtools,
+  ComplexHeatmap
