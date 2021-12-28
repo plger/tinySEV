@@ -12,6 +12,7 @@
 #' @importFrom shinyjs showElement hideElement
 #' @importFrom DT datatable renderDT
 #' @importFrom ComplexHeatmap draw
+#' @importFrom S4Vectors metadata
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
   options(shiny.maxRequestSize=uploadMaxSize)
 
