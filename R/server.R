@@ -85,8 +85,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
 
     SEs <- reactiveValues()
     for(nn in names(objects)) SEs[[nn]] <- objects[[nn]]
-    updateSelectInput(session, "object",
-                      choices=names(isolate(reactiveValuesToList(SEs))))
+    updateSelectInput(session, "object", choices=names(objects))
 
     SE <- reactive({
       if(is.null(input$object) || input$object=="" ||
@@ -104,8 +103,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
             SEname <- gsub("\\.SE\\.rds$|\\.rds$","",
                            basename(input$file$name), ignore.case=TRUE)
             SEs[[SEname]] <- x
-            updateSelectInput(session, "object", choices=names(SEs),
-                              selected=SEname)
+            updateSelectInput(session, "object", selected=SEname,
+                              choices=union(names(objects), names(SEs)))
           }else{
             stop("The object is not a SummarizedExperiment!")
           }
