@@ -20,7 +20,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
     names(objects) <- paste("Object ",seq_along(objects))
     x <- sapply(objects, FUN=function(x){
       if(is.character(x))
-        return(gsub("\\.SE\\.rds$|\\.rds$","",basename(x),ignore.case=TRUE))
+        return(gsub("\\.SE\\.rds$|\\.rds$", "", basename(x), ignore.case=TRUE))
       return(NULL)
     })
     x[which(is.null(x))] <- names(objects)[which(is.null(x))]
@@ -60,7 +60,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
       if(is.null(assayNames(x)))
         assayNames(x) <- paste0("assay",1:length(assays(x)))
       if(ncol(rowData(x))==0) rowData(x)$name <- row.names(x)
-      updateSelectizeInput(session, "gene_input",
+      updateSelectizeInput(session, "gene_input", selected=isolate(selGene()),
                            choices=sort(unique(row.names(x))), server=TRUE)
       colvars <- colnames(colData(x))
       updateSelectInput(session, "assay_input", choices=assayNames(x),
@@ -69,7 +69,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
                         selected=getDef(x, "assay"))
       updateSelectizeInput(session, "hm_order", choices=colvars)
       updateSelectizeInput(session, "hm_anno", choices=colvars,
-                           selected=getDef(x, c("groupvar","colvar","gridvar")))
+                           selected=getDef(x, c("groupvar","colvar")))
       updateSelectizeInput(session, "hm_gaps", choices=colvars,
                            selected=getDef(x, "gridvar"))
       updateSelectInput(session, "select_groupvar", choices=colvars,
@@ -95,7 +95,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
         SEs[[input$object]] <- readRDS(SEs[[input$object]])
       SEinit(SEs[[input$object]])
     })
-
+    
     observeEvent(input$file, {
       tryCatch({
         if(!is.null(input$file)){
@@ -120,7 +120,17 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
     output$SEout <- renderPrint({
       if(is.null(SE())) return(NULL)
       print(SE())
+      md <- metadata(SE())
+      for(f in c("title","name","source","description")){}
+      if(length(md <- md[intersect(c("title","name","source","description"),
+                                   names(md))])>0){
+        cat("
+Object metadata:
+")
+        for(f in names(md)) cat(f, ": ", md[[f]], "\n")
+      }
     })
+    
     output$SEout2 <- renderText({
       if(is.null(SE())) return("No object loaded")
       paste("A SummarizedExperiment with ", ncol(SE()), "samples, ",
@@ -159,6 +169,13 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
                             is(RD[[x]], "DFrame") ))]
       if(length(deas)==0) return(list())
       lapply(setNames(deas, gsub("^DEA\\.","",deas)), FUN=function(x) RD[[x]])
+    })
+    
+    output$menu_DEA <- renderUI({
+      if(is.null(DEAs())) return(menuItem("DEA results", tabName="tab_dea",
+                                          badgeLabel="N/A", badgeColor="red"))
+      menuItem("DEA results", tabName="tab_dea", badgeLabel=length(DEAs()),
+               badgeColor="aqua")
     })
 
     output$dea_input <- renderUI({
@@ -223,10 +240,15 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
         if(!is.null(dea$baseMean)) dea$MeanExpr <- dea$baseMean
       }
       dea$feature <- row.names(dea)
-      p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR,
-                           PValue=PValue, MeanExpr=MeanExpr, colour=MeanExpr)) +
-        geom_vline(xintercept=0, linetype="dashed") + geom_point()
-      p <- p + theme_classic()
+      if(is.null(dea$MeanExpr)){
+        p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR,
+                             PValue=PValue))
+      }else{
+        p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR,
+                             PValue=PValue, MeanExpr=MeanExpr, colour=MeanExpr))
+      }
+      p <- p + geom_vline(xintercept=0, linetype="dashed") + geom_point() +
+        theme_classic()
       plotlyObs$resume()
       ggplotly(p, tooltip=c("Feature","logFC","PValue","FDR"), source="volcano")
     })
@@ -238,8 +260,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
       if(!is.list(event) || is.null(event$pointNumber) && event$pointNumber>=0)
         return(NULL)
       g <- row.names(dea)[as.integer(event$pointNumber+1)]
+      selGene(g)
       updateTabItems(session, "main_tabs", "tab_gene")
-      updateSelectizeInput(session, "gene_input", selected=g)
     })
 
     ### END DEAs
@@ -252,6 +274,13 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
       if(is.list(eas[[1]]) && !is.data.frame(eas[[1]]) &&
          !is(eas[[1]], "DFrame")) eas <- unlist(eas, recursive=FALSE)
       eas
+    })
+    
+    output$menu_Enrichments <- renderUI({
+      if(length(EAs())==0) return(menuItem("Enrichments", tabName="tab_ea", 
+                                           badgeLabel="N/A", badgeColor="red"))
+      menuItem("Enrichments", tabName="tab_ea", badgeLabel=length(EAs()),
+               badgeColor="aqua")
     })
 
     output$ea_input <- renderUI({
@@ -301,8 +330,10 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
 
 
     output$heatmap <- renderPlot({
-      if(is.null(SE())) return(NULL)
-      if(length(g <- selGenes())==0) return(NULL)
+      validate( need(!is.null(SE()), "No SummarizedExperiment loaded.") )
+      g <- selGenes()
+      validate( need(length(g)>0, paste("No gene selected in the 'Genes' tab,",
+                      "or the selected genes are not found in the object.")) )
       if(length(g)>2 && input$hm_clusterRow){
         srow <- 1:ncol(SE())
       }else{
@@ -315,7 +346,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
       breaks <- NULL
       if(grepl("logFC|log2FC|scaledLFC|zscore", input$assay_input2,
                ignore.case=TRUE) || input$hm_scale)
-        breaks <- input$hm_breaks/100
+        breaks <- 1-(input$hm_breaks/100)
       draw(sechm(se, g, do.scale=input$hm_scale,
            assayName=input$assay_input2,
            sortRowsOn=srow, anno_columns=input$hm_anno, gaps_at=input$hm_gaps,
@@ -332,10 +363,17 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
 
     ############
     ### START GENE TAB
+    
+    selGene <- reactiveVal()
+    observeEvent(input$gene_input, selGene(input$gene_input))
+    
     output$gene_plot <- renderPlot({
-      d <- tryCatch(meltSE(SE(), input$gene_input),
+      d <- tryCatch(meltSE(SE(), isolate(selGene())),
                     error=function(x) NULL)
-      if(is.null(d)) return(NULL)
+      print(d)
+      validate( need(!is.null(d) && nrow(d)>0 && length(selGenes())>0,
+                  "No gene selected. Select one in the dropdown list above.
+You can type the first few letters in the box and select from the matching suggestions."))
       gr <- input$select_groupvar
       if(input$asfactor) d[[gr]] <- factor(d[[gr]])
       if(input$select_plotpoints){
@@ -364,12 +402,23 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
           p <- p + facet_wrap(form)
         }
       }
-      p
+      p + ggtitle(selGene())
     })
 
     ### END GENE TAB
     ############
 
+    observeEvent(input$quickStart, showModal(.getHelp("general")))
+    observeEvent(input$help_SE, showModal(.getHelp("SE")))
+    observeEvent(input$help_gassay, showModal(.getHelp("assay")))
+    observeEvent(input$help_ggroup, showModal(.getHelp("group")))
+    observeEvent(input$help_ggrid, showModal(.getHelp("grid")))
+    observeEvent(input$help_gfreeaxes, showModal(.getHelp("grid")))
+    observeEvent(input$help_hmassay, showModal(.getHelp("assay")))
+    observeEvent(input$help_hmscale, showModal(.getHelp("scale")))
+    observeEvent(input$help_hmtrim, showModal(.getHelp("scaletrim")))
+    
+    
     waiter_hide()
   }
 }
