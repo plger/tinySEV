@@ -4,7 +4,12 @@
 \alias{tinySEV.ui}
 \title{tinySEV.ui}
 \usage{
-tinySEV.ui(title = "tinySEV", waiterContent = NULL, about = NULL)
+tinySEV.ui(
+  title = "tinySEV",
+  waiterContent = NULL,
+  about = NULL,
+  skin = "blue"
+)
 }
 \arguments{
 \item{title}{The title of the app (displayed in the header)}
@@ -14,6 +19,9 @@ tinySEV.ui(title = "tinySEV", waiterContent = NULL, about = NULL)
 
 \item{about}{Optional content of the introduction page (NULL to disable
 intro page)}
+
+\item{skin}{The dashboard skin color, passed to 
+\code{\link[shinydashboard]{dashboardPage}}.}
 }
 \value{
 a shiny UI

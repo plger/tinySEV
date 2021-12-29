@@ -2,12 +2,37 @@
 % Please edit documentation in R/ui.R
 \name{tinySEV}
 \alias{tinySEV}
-\title{A shiny SummarizedExperiment viewer}
-\description{
-A shiny SummarizedExperiment viewer
+\title{tiny Summarized Experiment Viewer}
+\usage{
+tinySEV(
+  objects = NULL,
+  title = "tinySEV",
+  waiterContent = NULL,
+  about = NULL,
+  skin = "blue",
+  uploadMaxSize = 50 * 1024^2
+)
 }
-\examples{
-ui <- tinySEV.iu()
-server <- tinySEV.server(objects=c(SE1="path/to/SE1.rds",
-                                   SE2="path/to/SE2.rds"))
+\arguments{
+\item{objects}{A named list of (paths to)
+\code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects}
+
+\item{title}{The title of the app (displayed in the header)}
+
+\item{waiterContent}{Optional content of the loading mask; should be a
+`tagList`, NULL to use default, or FALSE to disable the waiter}
+
+\item{about}{Optional content of the introduction page (NULL to disable
+intro page)}
+
+\item{skin}{The dashboard skin color, passed to 
+\code{\link[shinydashboard]{dashboardPage}}.}
+
+\item{uploadMaxSize}{The maximum upload size. Set to zero to disable upload.}
+}
+\value{
+Launches a shiny app
+}
+\description{
+tiny Summarized Experiment Viewer
 }

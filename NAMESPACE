@@ -2,6 +2,7 @@
 
 export(dround)
 export(grepGene)
+export(tinySEV)
 export(tinySEV.server)
 export(tinySEV.ui)
 import(SEtools)
