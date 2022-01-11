@@ -172,8 +172,9 @@ Object metadata:
     })
     
     output$menu_DEA <- renderUI({
-      if(is.null(DEAs())) return(menuItem("DEA results", tabName="tab_dea",
-                                          badgeLabel="N/A", badgeColor="red"))
+      if(is.null(DEAs()) || length(DEAs())==0)
+        return(menuItem("DEA results", tabName="tab_dea",
+                    badgeLabel="N/A", badgeColor="red"))
       menuItem("DEA results", tabName="tab_dea", badgeLabel=length(DEAs()),
                badgeColor="aqua")
     })
@@ -365,13 +366,14 @@ Object metadata:
     ### START GENE TAB
     
     selGene <- reactiveVal()
-    observeEvent(input$gene_input, selGene(input$gene_input))
+    observeEvent(input$gene_input, {
+      selGene(input$gene_input)
+    })
     
     output$gene_plot <- renderPlot({
-      d <- tryCatch(meltSE(SE(), isolate(selGene())),
+      d <- tryCatch(meltSE(SE(), selGene()),
                     error=function(x) NULL)
-      print(d)
-      validate( need(!is.null(d) && nrow(d)>0 && length(selGenes())>0,
+      validate( need(!is.null(d) && nrow(d)>0,
                   "No gene selected. Select one in the dropdown list above.
 You can type the first few letters in the box and select from the matching suggestions."))
       gr <- input$select_groupvar
