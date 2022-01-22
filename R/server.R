@@ -3,6 +3,8 @@
 #' @param objects A named list of (paths to)
 #'   \code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
+#' @param genelists An optional named list of genes/features which will be 
+#'   flagged in the gene tab
 #'
 #' @return A shiny server function.
 #' @export
@@ -13,7 +15,8 @@
 #' @importFrom DT datatable renderDT
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
-tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2){
+tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, 
+                           genelists=list()){
   options(shiny.maxRequestSize=uploadMaxSize)
 
   if(!is.null(objects) && is.null(names(objects))){
@@ -406,6 +409,19 @@ You can type the first few letters in the box and select from the matching sugge
       }
       p + ggtitle(selGene())
     })
+    
+    output$gene_inList <- renderPrint({
+      if(is.null(g <- selGene()) || g=="" || length(genelists)==0)
+        return("")
+      if(grepl(".+\\.[a-zA-Z].+", g)) g <- gsub("^[^.]+\\.","",g)
+      g <- strsplit(g,"/")[[1]]
+      x <- which(sapply(genelists, FUN=function(x,g){ any(g %in% x) }))
+      if(length(x)==0)
+        return("This gene is included in none of the registered genelists.")
+      cat("This gene is included in the following list(s):\n\n")
+      for(i in names(genelists)[x]) cat(paste(i,"\n"))
+    })
+    
 
     ### END GENE TAB
     ############

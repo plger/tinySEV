@@ -10,14 +10,17 @@
 #' @param skin The dashboard skin color, passed to 
 #'   \code{\link[shinydashboard]{dashboardPage}}.
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
+#' @param genelists An optional named list of genes/features which will be 
+#'   flagged in the gene tab
 #'
 #' @return Launches a shiny app
 #' @import shiny
 #' @export
 tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL, 
-                    about=NULL, skin="blue", uploadMaxSize=50*1024^2){
+                    about=NULL, skin="blue", uploadMaxSize=50*1024^2, 
+                    genelists=list()){
   shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin), 
-           tinySEV.server(objects, uploadMaxSize))
+           tinySEV.server(objects, uploadMaxSize, genelists=genelists))
 }
 
 #' tinySEV.ui
@@ -140,7 +143,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
               checkboxInput('select_freeaxis',value=TRUE,
                             tags$span("Free axes ", actionLink("help_gfreeaxes", "[?]"))))
           ),
-          box(width=12, withSpinner(shinyjqui::jqui_resizable(plotOutput("gene_plot"))))
+          box(width=12, withSpinner(shinyjqui::jqui_resizable(plotOutput("gene_plot")))),
+          withSpinner(shiny::verbatimTextOutput("gene_inList"))
         ),
         tabItem("tab_hm_genes", box(width=12, title="Select genes to plot",
           textAreaInput('input_genes','Genes to plot', width="90%", rows=10,

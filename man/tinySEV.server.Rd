@@ -4,13 +4,16 @@
 \alias{tinySEV.server}
 \title{tinySEV.server}
 \usage{
-tinySEV.server(objects = NULL, uploadMaxSize = 50 * 1024^2)
+tinySEV.server(objects = NULL, uploadMaxSize = 50 * 1024^2, genelists = list())
 }
 \arguments{
 \item{objects}{A named list of (paths to)
 \code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects}
 
 \item{uploadMaxSize}{The maximum upload size. Set to zero to disable upload.}
+
+\item{genelists}{An optional named list of genes/features which will be 
+flagged in the gene tab}
 }
 \value{
 A shiny server function.
