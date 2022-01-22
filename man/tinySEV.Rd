@@ -11,7 +11,8 @@ tinySEV(
   about = NULL,
   skin = "blue",
   uploadMaxSize = 50 * 1024^2,
-  genelists = list()
+  genelists = list(),
+  ...
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ intro page)}
 
 \item{genelists}{An optional named list of genes/features which will be 
 flagged in the gene tab}
+
+\item{...}{Passed to \code{\link{tinySEV.server}}}
 }
 \value{
 Launches a shiny app

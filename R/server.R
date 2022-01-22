@@ -1,10 +1,11 @@
 #' tinySEV.server
 #'
 #' @param objects A named list of (paths to)
-#'   \code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects
+#'   \code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects.
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
+#' @param maxPlot The maximum number of features to allow for plotting heatmaps.
 #' @param genelists An optional named list of genes/features which will be 
-#'   flagged in the gene tab
+#'   flagged in the gene tab.
 #'
 #' @return A shiny server function.
 #' @export
@@ -15,9 +16,10 @@
 #' @importFrom DT datatable renderDT
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
-tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, 
-                           genelists=list()){
+tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
+                           genelists=list(), genelistTab=length(genelists)>0){
   options(shiny.maxRequestSize=uploadMaxSize)
+  genelists <- genelists[lengths(genelists)>0]
 
   if(!is.null(objects) && is.null(names(objects))){
     names(objects) <- paste("Object ",seq_along(objects))
@@ -58,6 +60,11 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2,
       if(!(uploadMaxSize>0)) return(NULL)
       menuSubItem("Upload object", tabName="tab_fileinput")
     })
+    output$menu_genelist <- renderUI({
+      if(genelistTab && length(genelists)==0) return(NULL)
+      menuItem("Gene lists", tabName="tab_genelists")
+    })
+    output$maxGenes <- renderText(maxPlot)
 
     SEinit <- function(x){
       if(is.null(assayNames(x)))
@@ -90,6 +97,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2,
     SEs <- reactiveValues()
     for(nn in names(objects)) SEs[[nn]] <- objects[[nn]]
     updateSelectInput(session, "object", choices=names(objects))
+    if(length(genelists)>0)
+      updateSelectInput(session, "genelist_input", choices=names(genelists))
 
     SE <- reactive({
       if(is.null(input$object) || input$object=="" ||
@@ -201,14 +210,14 @@ Object metadata:
 
     observeEvent(input$dea_geneFilt, {
       if(length(g <- input$dea_table_rows_all)>0){
-        g <- row.names(DEA())[head(g,500)]
+        g <- row.names(DEA())[head(g,maxPlot)]
         updateTextAreaInput(session, "input_genes", value=paste(g, collapse=", "))
         updateTabItems(session, "main_tabs", selected="tab_heatmap")
       }
     })
     observeEvent(input$dea_geneSel, {
       if(length(g <- input$dea_table_rows_selected)>0){
-        g <- row.names(DEA())[head(g,500)]
+        g <- row.names(DEA())[head(g,maxPlot)]
         updateTextAreaInput(session, "input_genes", value=paste(g, collapse=", "))
         updateTabItems(session, "main_tabs", selected="tab_heatmap")
       }
@@ -315,7 +324,7 @@ Object metadata:
     observeEvent(input$ea_geneSel, {
       if(is.null(ea <- EA()) || is.null(ea$genes)) return(NULL)
       if(length(RN <- input$ea_table_rows_selected)>0){
-        g <- head(unique(unlist(.getWordsFromString(ea[RN,"genes"]))), 500)
+        g <- head(unique(unlist(.getWordsFromString(ea[RN,"genes"]))), maxPlot)
         updateTextAreaInput(session, "input_genes", value=paste(g, collapse=", "))
         updateTabItems(session, "main_tabs", selected="tab_heatmap")
       }
@@ -410,7 +419,7 @@ You can type the first few letters in the box and select from the matching sugge
       p + ggtitle(selGene())
     })
     
-    output$gene_inList <- renderPrint({
+    output$gene_inList <- renderText({
       if(is.null(g <- selGene()) || g=="" || length(genelists)==0)
         return("")
       if(grepl(".+\\.[a-zA-Z].+", g)) g <- gsub("^[^.]+\\.","",g)
@@ -418,13 +427,37 @@ You can type the first few letters in the box and select from the matching sugge
       x <- which(sapply(genelists, FUN=function(x){ any(g %in% x) }))
       if(length(x)==0)
         return("This gene is included in none of the registered genelists.")
-      cat("This gene is included in the following list(s):\n\n")
-      for(i in names(genelists)[x]) cat(paste(i,"\n"))
+      out <- "This gene is included in the following list(s):\n"
+      paste(out, names(genelists)[x], collapse="\n")
     })
     
 
     ### END GENE TAB
     ############
+    ### START GENELISTS TAB
+    
+    output$genelist_size <- renderText({
+      if(is.null(input$genelist_input) || 
+         is.null(gl <- genelists[[input$genelist_input]])) return(NULL)
+      length(gl)
+    })
+    output$genelist_out <- renderText({
+      if(is.null(input$genelist_input) || 
+         is.null(gl <- genelists[[input$genelist_input]])) return(NULL)
+      paste(gl, collapse=", ")
+    })
+    observeEvent(input$btn_importGenelist, {
+      if(!is.null(input$genelist_input) &&  
+         !is.null(g <- genelists[[input$genelist_input]]))
+      g <- head(g,maxPlot)
+      updateTextAreaInput(session, "input_genes", value=paste(g, collapse=", "))
+      updateTabItems(session, "main_tabs", selected="tab_heatmap")
+    })
+    
+    
+    ### END GENELISTS TAB
+    ############
+    
 
     observeEvent(input$quickStart, showModal(.getHelp("general")))
     observeEvent(input$help_SE, showModal(.getHelp("SE")))
@@ -435,6 +468,7 @@ You can type the first few letters in the box and select from the matching sugge
     observeEvent(input$help_hmassay, showModal(.getHelp("assay")))
     observeEvent(input$help_hmscale, showModal(.getHelp("scale")))
     observeEvent(input$help_hmtrim, showModal(.getHelp("scaletrim")))
+    observeEvent(input$help_genelists, showModal(.getHelp("genelists")))
     
     
     waiter_hide()

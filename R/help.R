@@ -25,6 +25,10 @@
         DEA/Enrichments tabs into the gene/heatmap tabs!"),
       footer=paste("tinySEV version", as.character(packageVersion("tinySEV")))
     ),
+    genelists=modalDialog(title="Gene lists", easyClose=TRUE,
+      "Gene lists are simply pre-loaded lists of genes/features, which can be
+      used as selection for plotting. List membership will additionally be 
+      flagged in the 'Plot gene' tab."),
     assay=modalDialog(title="Assays", easyClose=TRUE,
       "The 'assay' represents the type of values to plot. These could for 
       instance be raw un-normalized data (e.g. counts, intensity), normalized
@@ -32,7 +36,7 @@
       or corrected data, or relative signals like log-foldchanges relative to
       a reference condition (pre-defined in the object)."),
     group=modalDialog(title="Grouping", easyClose=TRUE,
-      "'Group by' determines the varialbe on the basis of which the points 
+                      "'Group by' determines the varialbe on the basis of which the points 
       are grouped together. Typically, 'group_by' will be the same as 'Color by'."),
     grid=modalDialog(title="Grid/faceting", easyClose=TRUE,
       "'Grid by' can be used to split a plot into subplots showing different 

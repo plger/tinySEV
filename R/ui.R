@@ -12,15 +12,16 @@
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
 #' @param genelists An optional named list of genes/features which will be 
 #'   flagged in the gene tab
+#' @param ... Passed to \code{\link{tinySEV.server}}
 #'
 #' @return Launches a shiny app
 #' @import shiny
 #' @export
 tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL, 
                     about=NULL, skin="blue", uploadMaxSize=50*1024^2, 
-                    genelists=list()){
+                    genelists=list(), ...){
   shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin), 
-           tinySEV.server(objects, uploadMaxSize, genelists=genelists))
+           tinySEV.server(objects, uploadMaxSize, genelists=genelists, ...))
 }
 
 #' tinySEV.ui
@@ -71,7 +72,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
         .modify_stop_propagation(menuItem("Heatmap", startExpanded=TRUE,
           menuSubItem("Genes", tabName="tab_hm_genes"),
           menuSubItem("Heatmap", tabName="tab_heatmap")
-        ))
+        )),
+        menuItemOutput("menu_genelist")
       )
     ),
     dashboardBody(
@@ -108,8 +110,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
   	         tabPanel("Overview", textOutput("dea_overview"),
   	           withSpinner(plotOutput("dea_pvalues", width="400px", height="300px"))),
   	         tabPanel("Table", withSpinner(DTOutput("dea_table")),
-  	                  actionButton("dea_geneFilt", "Transfer filtered genes (max 500) to the heatmap"),
-  	                  actionButton("dea_geneSel", "Transfer selected rows (max 500) to the heatmap")),
+  	                  actionButton("dea_geneFilt", "Transfer filtered genes to the heatmap"),
+  	                  actionButton("dea_geneSel", "Transfer selected rows to the heatmap")),
   	         tabPanel("Volcano", withSpinner(plotlyOutput("dea_volcano")),
   	                  tags$p("You may click on a gene to view it."))
   	       )
@@ -121,7 +123,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                ),
                tags$div(style="width: 100%; overflow-x: scroll; font-size: 80%",
                         withSpinner(DTOutput("ea_table"))),
-               actionButton("ea_geneSel", "Transfer genes from selected rows (max 500) to the heatmap"))),
+               actionButton("ea_geneSel", "Transfer genes from selected rows to the heatmap"))),
         tabItem("tab_gene",
           column(4, selectizeInput("gene_input", "Select Gene", choices=c(), multiple=FALSE)),
           box(width=8, title="Options", collapsible=TRUE, collapsed=TRUE,
@@ -144,7 +146,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                             tags$span("Free axes ", actionLink("help_gfreeaxes", "[?]"))))
           ),
           box(width=12, withSpinner(shinyjqui::jqui_resizable(plotOutput("gene_plot")))),
-          withSpinner(shiny::verbatimTextOutput("gene_inList"))
+          box(width=12, withSpinner(shiny::verbatimTextOutput("gene_inList")))
         ),
         tabItem("tab_hm_genes", box(width=12, title="Select genes to plot",
           textAreaInput('input_genes','Genes to plot', width="90%", rows=10,
@@ -152,7 +154,10 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
           tags$p("If your the row names of the object are dot-separated IDs, 
                  such as 'ensemblID.symbol' (you can view this in the 'Features' tab),
                  you may also enter just the genes symbols and the corresponding 
-                 rows will be fetched."))),
+                 rows will be fetched."),
+          tags$p(tags$strong("Important:"), "Note that the number of input genes
+                 is capped to ", textOutput("maxGenes", inline=TRUE)))
+        ),
         tabItem("tab_heatmap",
              box( width=12, title="Heatmap parameters", collapsible=TRUE,
                   column(4, selectInput("assay_input2", choices=c(), multiple=FALSE,
@@ -172,6 +177,20 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
              ),
              box(width=12, title="Heatmap",
                  withSpinner(shinyjqui::jqui_resizable(plotOutput("heatmap", height=600))))
+        ),
+        tabItem("tab_genelists", 
+          box(width=12, title="Gene lists",
+            fluidRow(
+              column(width=6, 
+                selectInput("genelist_input", choices=c(), multiple=FALSE,
+                  tags$span("Select gene list ", 
+                            actionLink("help_genelists", "[?]")))),
+              column(width=2,tags$strong("Size: "),textOutput("genelist_size")),
+              column(width=4, actionButton("btn_importGenelist",
+                                label="Use as heatmap input"))
+            ),
+            verbatimTextOutput("genelist_out")
+          )
         ),
         tabItem("tab_about", about)
     ), tags$div(style="clear: both;")
