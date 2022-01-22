@@ -415,7 +415,7 @@ You can type the first few letters in the box and select from the matching sugge
         return("")
       if(grepl(".+\\.[a-zA-Z].+", g)) g <- gsub("^[^.]+\\.","",g)
       g <- strsplit(g,"/")[[1]]
-      x <- which(sapply(genelists, FUN=function(x,g){ any(g %in% x) }))
+      x <- which(sapply(genelists, FUN=function(x){ any(g %in% x) }))
       if(length(x)==0)
         return("This gene is included in none of the registered genelists.")
       cat("This gene is included in the following list(s):\n\n")
