@@ -53,6 +53,13 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     if(is.null(se@metadata$default_view[[var]])) return(NULL)
     se@metadata$default_view[[var]]
   }
+  
+  DEAselRender <- "function(item, escape){
+    if (item.value === item.label) return '<div><b>' + item.label + '</b><div>';
+    var oOut = '<div><b>' + item.value + ': </b><br/>';
+    oOut = oOut + '<div style=\"padding: 0 10px 10px 20px;\">';
+    return oOut + item.label + '</div></div>'; 
+  }"
 
   function(input, output, session) {
 
@@ -197,8 +204,17 @@ Object metadata:
         return(tags$h5(icon("exclamation-triangle"),
                        "The object contains no DEA."))
       showElement("dea_box")
-      selectInput("dea", label="Differential expression analysis",
-                  choices=names(DEAs()))
+      choices <- sapply(names(DEAs()), FUN=function(x){
+        if(!is.null(a <- attr(DEAs()[[x]], "description"))) return(a)
+        x
+      })
+      choices <- setNames(names(DEAs()), choices)
+      options = list( render = I(paste("{
+        item:", DEAselRender, ",
+        option:", DEAselRender, "}"))
+      )
+      selectizeInput("dea", label="Differential expression analysis",
+                     choices=choices, options=options)
     })
 
     DEA <- reactive({
@@ -301,10 +317,18 @@ Object metadata:
       if(length(EAs())==0)
         return(tags$h5(icon("exclamation-triangle"),
                        "The object contains no enrichment analysis"))
-      eas <- EAs()
-      eas <- setNames(names(eas), gsub("DEA\\.","",names(eas)))
       showElement("ea_box")
-      selectInput("ea", label="Enrichment analysis", choices=eas)
+      choices <- sapply(names(EAs()), FUN=function(x){
+        if(!is.null(a <- attr(EAs()[[x]], "description"))) return(a)
+        x
+      })
+      choices <- setNames(names(EAs()), choices)
+      options = list( render = I(paste("{
+        item:", DEAselRender, ",
+        option:", DEAselRender, "}"))
+      )
+      selectizeInput("ea", label="Enrichment analysis", choices=choices, 
+                     options=options)
     })
 
     EA <- reactive({
