@@ -111,7 +111,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
   	           withSpinner(plotOutput("dea_pvalues", width="400px", height="300px"))),
   	         tabPanel("Table", withSpinner(DTOutput("dea_table")),
   	                  actionButton("dea_geneFilt", "Transfer filtered genes to the heatmap"),
-  	                  actionButton("dea_geneSel", "Transfer selected rows to the heatmap")),
+  	                  actionButton("dea_geneSel", "Transfer selected rows to the heatmap"),
+  	                  downloadLink('dea_download', label="Download whole table")),
   	         tabPanel("Volcano", withSpinner(plotlyOutput("dea_volcano")),
   	                  tags$p("You may click on a gene to view it."))
   	       )

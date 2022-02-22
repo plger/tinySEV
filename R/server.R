@@ -292,6 +292,17 @@ Object metadata:
       selGene(g)
       updateTabItems(session, "main_tabs", "tab_gene")
     })
+    
+    output$dea_download <- downloadHandler(
+      filename = function() {
+        if(is.null(DEA())) return(NULL)
+        paste0(make.names(input$dea),".csv")
+      },
+      content = function(con) {
+        if(is.null(dea <- DEA())) return(NULL)
+        write.csv(dea, con)
+      }
+    )
 
     ### END DEAs
     ############
