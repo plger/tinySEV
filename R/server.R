@@ -43,14 +43,20 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     return(unique(unlist(g)))
   }
 
-  getDef <- function(se,var){
+  getDef <- function(se,var, choices=NULL){
     if(length(var)>1){
       y <- unlist(lapply(var, FUN=function(x) getDef(se,x)))
       y <- y[!sapply(y,is.null)]
-      if(length(y)==0) return(NULL)
+      if(length(y)==0){
+        if(is.null(choices)) return(NULL)
+        return(choices[[1]])
+      }
       return(y)
     }
-    if(is.null(se@metadata$default_view[[var]])) return(NULL)
+    if(is.null(se@metadata$default_view[[var]])){
+      if(is.null(choices)) return(NULL)
+      return(choices[[1]])
+    }
     se@metadata$default_view[[var]]
   }
   
@@ -80,10 +86,12 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       updateSelectizeInput(session, "gene_input", selected=isolate(selGene()),
                            choices=sort(unique(row.names(x))), server=TRUE)
       colvars <- colnames(colData(x))
+      updateSelectInput(session, "input_hm_samples", choices=colnames(x),
+                           selected=colnames(x))
       updateSelectInput(session, "assay_input", choices=assayNames(x),
-                        selected=getDef(x, "assay"))
+                        selected=getDef(x, "assay", rev(assayNames(x))))
       updateSelectInput(session, "assay_input2", choices=assayNames(x),
-                        selected=getDef(x, "assay"))
+                        selected=getDef(x, "assay", rev(assayNames(x))))
       updateSelectizeInput(session, "hm_order", choices=colvars)
       updateSelectizeInput(session, "hm_anno", choices=colvars,
                            selected=getDef(x, c("groupvar","colvar")))
@@ -380,14 +388,18 @@ Object metadata:
     output$heatmap <- renderPlot({
       validate( need(!is.null(SE()), "No SummarizedExperiment loaded.") )
       g <- selGenes()
-      validate( need(length(g)>0, paste("No gene selected in the 'Genes' tab,",
-                      "or the selected genes are not found in the object.")) )
+      validate( need(length(g)>0, 
+                     message=paste("No gene selected. Select one in the ",
+         "dropdown list above. You can type the first few letters in the box ",
+         "and select from the matching suggestions.")) )
       if(length(g)>2 && input$hm_clusterRow){
         srow <- 1:ncol(SE())
       }else{
         srow <- NULL
       }
-      se <- SE()[g,]
+      se <- SE()[g, input$input_hm_samples]
+      validate(need(ncol(se)>1,
+                    message="At least two samples must be selected."))
       o <- input$hm_order
       if(is.null(o)) o <- c()
       for(f in rev(o)) se <- se[,order(colData(se)[[f]])]
@@ -397,7 +409,7 @@ Object metadata:
         breaks <- 1-(input$hm_breaks/100)
       draw(sechm(se, g, do.scale=input$hm_scale,
            assayName=input$assay_input2,
-           sortRowsOn=srow, anno_columns=input$hm_anno, gaps_at=input$hm_gaps,
+           sortRowsOn=srow, top_annotation=input$hm_anno, gaps_at=input$hm_gaps,
            cluster_cols=input$hm_clusterCol, cluster_rows=FALSE,
            breaks=breaks), merge_legends=TRUE)
 
@@ -421,8 +433,11 @@ Object metadata:
       d <- tryCatch(meltSE(SE(), selGene()),
                     error=function(x) NULL)
       validate( need(!is.null(d) && nrow(d)>0,
-                  "No gene selected. Select one in the dropdown list above.
-You can type the first few letters in the box and select from the matching suggestions."))
+                     message=paste("No gene selected. Select one in the ",
+        "dropdown list above. You can type the first few letters in the box ",
+        "and select from the matching suggestions.")) )
+      d <- d[d$sample %in% input$input_hm_samples,]
+      validate( need(nrow(d)>0, message="No sample selected!") )
       gr <- input$select_groupvar
       if(input$asfactor) d[[gr]] <- factor(d[[gr]])
       if(input$select_plotpoints){

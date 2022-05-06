@@ -68,6 +68,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
              menuItemOutput("uploadMenu"))),
         menuItemOutput("menu_DEA"),
         menuItemOutput("menu_Enrichments"),
+        hr(),
+        menuItem("Subset samples", tabName="tab_hm_samples"),
         menuItem("Plot gene", tabName="tab_gene"),
         .modify_stop_propagation(menuItem("Heatmap", startExpanded=TRUE,
           menuSubItem("Genes", tabName="tab_hm_genes"),
@@ -158,6 +160,12 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                  rows will be fetched."),
           tags$p(tags$strong("Important:"), "Note that the number of input genes
                  is capped to ", textOutput("maxGenes", inline=TRUE)))
+        ),
+        tabItem("tab_hm_samples", box(width=12, title="Select samples",
+                selectInput("input_hm_samples", multiple=TRUE, selectize=FALSE, 
+                            label="Select samples to include", choices=c(),
+                            size=15)
+          )
         ),
         tabItem("tab_heatmap",
              box( width=12, title="Heatmap parameters", collapsible=TRUE,
