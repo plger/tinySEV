@@ -430,8 +430,8 @@ Object metadata:
     })
     
     output$gene_plot <- renderPlot({
-      d <- tryCatch(meltSE(SE(), selGene()),
-                    error=function(x) NULL)
+      d <- tryCatch(SEtools::meltSE(SE(), selGene()),
+                    error=function(x){ NULL })
       validate( need(!is.null(d) && nrow(d)>0,
                      message=paste("No gene selected. Select one in the ",
         "dropdown list above. You can type the first few letters in the box ",
