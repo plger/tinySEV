@@ -9,7 +9,7 @@
 #'
 #' @return A shiny server function.
 #' @export
-#' @import shiny ggplot2 SummarizedExperiment SEtools waiter
+#' @import shiny ggplot2 SummarizedExperiment sechm waiter
 #' @importFrom plotly ggplotly renderPlotly event_data
 #' @importFrom shinydashboard updateTabItems
 #' @importFrom shinyjs showElement hideElement
