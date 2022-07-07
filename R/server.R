@@ -37,7 +37,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
   
   if(!is.null(filelist) && length(filelist)>0){
     if(is.character(filelist)){
-      filelist <- list.dirs(filelist)
+      filelist <- list.dirs(filelist, recursive=FALSE)
       filelist <- lapply(setNames(filelist,basename(filelist)), FUN=function(x){
         paste0(x,"/",list.files(x))
       })
@@ -86,13 +86,14 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       menuSubItem("Upload object", tabName="tab_fileinput")
     })
     
-    flists <- reactive({
-      if(!feature.listsTab) return(list())
-      fl <- metadata(SE())$feature.lists
+    mergeFlists <- function(se){
+      fl <- tryCatch(metadata(se)$feature.lists, error=function(e) NULL)
       if(is.null(fl)) fl <- list()
       fl <- c(fl, feature.lists[setdiff(names(feature.lists), names(fl))])
-      fl[lengths(fl)>0]
-    })
+      fl <- fl[lengths(fl)>0]
+      metadata(se)$feature.lists <- fl
+      se
+    }
     
     output$menu_genelist <- renderUI({
       if(feature.listsTab) return(NULL)
@@ -124,7 +125,9 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                         selected=getDef(x, "colvar"))
       updateSelectInput(session, "select_gridvars", choices=colvars,
                         selected=getDef(x, "gridvar"))
-      updateSelectInput(session, "genelist_input", choices=names(flists()))
+      x <- mergeFlists(x)
+      updateSelectInput(session, "genelist_input",
+                        choices=names(metadata(x)$feature.lists))
       if(!is.null(getDef(x, "assay")))
         updateCheckboxInput(session, "hm_scale",
                             value=!grepl("FC$",getDef(x, "assay")))
@@ -143,6 +146,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
         SEs[[input$object]] <- readRDS(SEs[[input$object]])
       SEinit(SEs[[input$object]])
     })
+    
+    flists <- reactive({ metadata(x)$feature.lists })
     
     observeEvent(input$file, {
       tryCatch({
