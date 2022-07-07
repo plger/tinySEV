@@ -96,7 +96,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     }
     
     output$menu_genelist <- renderUI({
-      if(feature.listsTab) return(NULL)
+      if(!feature.listsTab) return(NULL)
       menuItem("Feature lists", tabName="tab_genelists")
     })
     output$maxGenes <- renderText(maxPlot)
@@ -147,7 +147,10 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       SEinit(SEs[[input$object]])
     })
     
-    flists <- reactive({ metadata(x)$feature.lists })
+    flists <- reactive({
+      if(is.null(SE())) return(NULL)
+      metadata(SE())$feature.lists
+    })
     
     observeEvent(input$file, {
       tryCatch({
@@ -202,10 +205,12 @@ Object metadata:
     })
     
     output$SEfiles <- renderUI({
-      if(is.null(input$file) || is.null(filelist) || 
-         length(ff <- filelist[[input$file]])==0) return(NULL)
+      print(filelist)
+      print(input$object)
+      if(is.null(input$object) || is.null(filelist) || 
+         length(ff <- filelist[[input$object]])==0) return(NULL)
       lapply(ff, FUN=function(x){
-        tags$li(tags$a(href=x, download=gsub(" ","_",basename(x))))
+        tags$li(tags$a(href=x, basename(x), download=gsub(" ","_",basename(x))))
       })
     })
 

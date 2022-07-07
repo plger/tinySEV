@@ -90,7 +90,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                     tags$p(withSpinner(textOutput("SEout2"))),
                     withSpinner(verbatimTextOutput("SEout"))),
                 box(width=12, title="Associated files",
-                    tags$ul(withSpinner(uiOutput("SEfiles")))
+                    tags$ul(uiOutput("SEfiles"))
                     )),
         tabItem("tab_fileinput",
           box(width=7, 
