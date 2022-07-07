@@ -10,8 +10,6 @@
 #' @param skin The dashboard skin color, passed to 
 #'   \code{\link[shinydashboard]{dashboardPage}}.
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
-#' @param genelists An optional named list of genes/features which will be 
-#'   flagged in the gene tab
 #' @param ... Passed to \code{\link{tinySEV.server}}
 #'
 #' @return Launches a shiny app
@@ -19,9 +17,9 @@
 #' @export
 tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL, 
                     about=NULL, skin="blue", uploadMaxSize=50*1024^2, 
-                    genelists=list(), ...){
+                    ...){
   shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin), 
-           tinySEV.server(objects, uploadMaxSize, genelists=genelists, ...))
+           tinySEV.server(objects, uploadMaxSize, ...))
 }
 
 #' tinySEV.ui
@@ -88,8 +86,12 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
       tabItems(
         tabItem("tab_object",
                 box(width=12, title="Object overview",
+                    tags$p(withSpinner(textOutput("SEdescription"))),
                     tags$p(withSpinner(textOutput("SEout2"))),
-                    withSpinner(verbatimTextOutput("SEout")))),
+                    withSpinner(verbatimTextOutput("SEout"))),
+                box(width=12, title="Associated files",
+                    tags$ul(withSpinner(uiOutput("SEfiles")))
+                    )),
         tabItem("tab_fileinput",
           box(width=7, 
               tags$p("You may upload your own SummarizedExperiment (SE) object 

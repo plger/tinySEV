@@ -4,8 +4,11 @@
 #'   \code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects.
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
 #' @param maxPlot The maximum number of features to allow for plotting heatmaps.
-#' @param genelists An optional named list of genes/features which will be 
+#' @param feature.lists An optional named list of genes/features which will be 
 #'   flagged in the gene tab.
+#' @param filelist A named list of downloadable files optionally associated with
+#'   elements of `objects`, or a folder where to find these files
+#' @param feature.listsTab Logical, whether to show the feature list tab
 #'
 #' @return A shiny server function.
 #' @export
@@ -17,9 +20,9 @@
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
-                           genelists=list(), genelistTab=length(genelists)>0){
+                           feature.lists=list(), filelist=list(),
+                           feature.listsTab=length(feature.lists)>0){
   options(shiny.maxRequestSize=uploadMaxSize)
-  genelists <- genelists[lengths(genelists)>0]
 
   if(!is.null(objects) && is.null(names(objects))){
     names(objects) <- paste("Object ",seq_along(objects))
@@ -30,6 +33,15 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     })
     x[which(is.null(x))] <- names(objects)[which(is.null(x))]
     names(objects) <- make.unique(x, sep=" ")
+  }
+  
+  if(!is.null(filelist) && length(filelist)>0){
+    if(is.character(filelist)){
+      filelist <- list.dirs(filelist)
+      filelist <- lapply(setNames(filelist,basename(filelist)), FUN=function(x){
+        paste0(x,"/",list.files(x))
+      })
+    }
   }
 
   grepGene <- function(x,g){
@@ -73,9 +85,18 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(!(uploadMaxSize>0)) return(NULL)
       menuSubItem("Upload object", tabName="tab_fileinput")
     })
+    
+    flists <- reactive({
+      if(!feature.listsTab) return(list())
+      fl <- metadata(SE())$feature.lists
+      if(is.null(fl)) fl <- list()
+      fl <- c(fl, feature.lists[setdiff(names(feature.lists), names(fl))])
+      fl[lengths(fl)>0]
+    })
+    
     output$menu_genelist <- renderUI({
-      if(genelistTab && length(genelists)==0) return(NULL)
-      menuItem("Gene lists", tabName="tab_genelists")
+      if(feature.listsTab) return(NULL)
+      menuItem("Feature lists", tabName="tab_genelists")
     })
     output$maxGenes <- renderText(maxPlot)
 
@@ -103,6 +124,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                         selected=getDef(x, "colvar"))
       updateSelectInput(session, "select_gridvars", choices=colvars,
                         selected=getDef(x, "gridvar"))
+      updateSelectInput(session, "genelist_input", choices=names(flists()))
       if(!is.null(getDef(x, "assay")))
         updateCheckboxInput(session, "hm_scale",
                             value=!grepl("FC$",getDef(x, "assay")))
@@ -112,8 +134,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     SEs <- reactiveValues()
     for(nn in names(objects)) SEs[[nn]] <- objects[[nn]]
     updateSelectInput(session, "object", choices=names(objects))
-    if(length(genelists)>0)
-      updateSelectInput(session, "genelist_input", choices=names(genelists))
+      
 
     SE <- reactive({
       if(is.null(input$object) || input$object=="" ||
@@ -143,19 +164,25 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
         })
     })
 
-
+    ############
+    ### Overview tabs
+    
     output$SEout <- renderPrint({
       if(is.null(SE())) return(NULL)
       print(SE())
       md <- metadata(SE())
-      for(f in c("title","name","source","description")){}
-      if(length(md <- md[intersect(c("title","name","source","description"),
+      if(length(md <- md[intersect(c("title","name","source"),
                                    names(md))])>0){
         cat("
 Object metadata:
 ")
         for(f in names(md)) cat(f, ": ", md[[f]], "\n")
       }
+    })
+    
+    output$SEdescription <- renderText({
+      if(is.null(SE())) return(NULL)
+      metadata(SE())$description
     })
     
     output$SEout2 <- renderText({
@@ -167,6 +194,14 @@ Object metadata:
     output$fileout <- renderPrint({
       if(is.null(SE())) return(NULL)
       print(SE())
+    })
+    
+    output$SEfiles <- renderUI({
+      if(is.null(input$file) || is.null(filelist) || 
+         length(ff <- filelist[[input$file]])==0) return(NULL)
+      lapply(ff, FUN=function(x){
+        tags$li(tags$a(href=x, download=gsub(" ","_",basename(x))))
+      })
     })
 
     output$features <- renderDT({
@@ -470,42 +505,42 @@ Object metadata:
     })
     
     output$gene_inList <- renderText({
-      if(is.null(g <- selGene()) || g=="" || length(genelists)==0)
+      if(is.null(g <- selGene()) || g=="" || length(flists())==0)
         return("")
       if(grepl(".+\\.[a-zA-Z].+", g)) g <- gsub("^[^.]+\\.","",g)
       g <- strsplit(g,"/")[[1]]
-      x <- which(sapply(genelists, FUN=function(x){ any(g %in% x) }))
+      x <- which(sapply(flists(), FUN=function(x){ any(g %in% x) }))
       if(length(x)==0)
-        return("This gene is included in none of the registered genelists.")
-      out <- "This gene is included in the following list(s):\n"
-      paste(out, names(genelists)[x], collapse="\n")
+        return("This feature is included in none of the registered lists.")
+      out <- "This feature is included in the following list(s):\n"
+      paste(out, names(flists())[x], collapse="\n")
     })
     
 
     ### END GENE TAB
     ############
-    ### START GENELISTS TAB
+    ### START feature.lists TAB
     
     output$genelist_size <- renderText({
       if(is.null(input$genelist_input) || 
-         is.null(gl <- genelists[[input$genelist_input]])) return(NULL)
+         is.null(gl <- flists()[[input$genelist_input]])) return(NULL)
       length(gl)
     })
     output$genelist_out <- renderText({
       if(is.null(input$genelist_input) || 
-         is.null(gl <- genelists[[input$genelist_input]])) return(NULL)
+         is.null(gl <- flists()[[input$genelist_input]])) return(NULL)
       paste(gl, collapse=", ")
     })
     observeEvent(input$btn_importGenelist, {
-      if(!is.null(input$genelist_input) &&  
-         !is.null(g <- genelists[[input$genelist_input]]))
+      if(is.null(input$genelist_input) ||  
+         is.null(g <- flists()[[input$genelist_input]])) return(NULL)
       g <- head(g,maxPlot)
       updateTextAreaInput(session, "input_genes", value=paste(g, collapse=", "))
       updateTabItems(session, "main_tabs", selected="tab_heatmap")
     })
     
     
-    ### END GENELISTS TAB
+    ### END feature.lists TAB
     ############
     
 
@@ -518,7 +553,7 @@ Object metadata:
     observeEvent(input$help_hmassay, showModal(.getHelp("assay")))
     observeEvent(input$help_hmscale, showModal(.getHelp("scale")))
     observeEvent(input$help_hmtrim, showModal(.getHelp("scaletrim")))
-    observeEvent(input$help_genelists, showModal(.getHelp("genelists")))
+    observeEvent(input$help_feature.lists, showModal(.getHelp("feature.lists")))
     
     
     waiter_hide()
