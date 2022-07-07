@@ -39,7 +39,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     if(is.character(filelist)){
       filelist <- list.dirs(filelist, recursive=FALSE)
       filelist <- lapply(setNames(filelist,basename(filelist)), FUN=function(x){
-        paste0(x,"/",list.files(x))
+        paste0(basename(x),"/",list.files(x))
       })
     }
   }
@@ -205,8 +205,6 @@ Object metadata:
     })
     
     output$SEfiles <- renderUI({
-      print(filelist)
-      print(input$object)
       if(is.null(input$object) || is.null(filelist) || 
          length(ff <- filelist[[input$object]])==0) return(NULL)
       lapply(ff, FUN=function(x){
