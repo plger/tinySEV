@@ -23,6 +23,9 @@ intro page)}
 
 \item{skin}{The dashboard skin color, passed to 
 \code{\link[shinydashboard]{dashboardPage}}.}
+
+\item{hasLogin}{Logical; whether login is required (credentials must also be
+provided to the server function). Default FALSE.}
 }
 \value{
 a shiny UI

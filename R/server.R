@@ -15,13 +15,14 @@
 #'
 #' @return A shiny server function.
 #' @export
-#' @import shiny ggplot2 SummarizedExperiment sechm waiter shinyauthr
+#' @import shiny ggplot2 SummarizedExperiment sechm waiter
 #' @importFrom plotly ggplotly renderPlotly event_data
 #' @importFrom shinydashboard updateTabItems
 #' @importFrom shinyjs showElement hideElement
 #' @importFrom DT datatable renderDT
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
+#' @importFrom shinyauthr loginServer
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                            feature.lists=list(), filelist=list(), logins=NULL,
                            feature.listsTab=length(feature.lists)>0){

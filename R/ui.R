@@ -10,6 +10,9 @@
 #' @param skin The dashboard skin color, passed to 
 #'   \code{\link[shinydashboard]{dashboardPage}}.
 #' @param uploadMaxSize The maximum upload size. Set to zero to disable upload.
+#' @param logins An optional dataframe containing possible logins. Must contain 
+#'   the columns "user" and "password_hash" (sodium-encoded). Not providing the
+#'   argument disables login.
 #' @param ... Passed to \code{\link{tinySEV.server}}
 #'
 #' @return Launches a shiny app
@@ -18,7 +21,8 @@
 tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL, 
                     about=NULL, skin="blue", uploadMaxSize=50*1024^2, 
                     logins=NULL, ...){
-  shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin, hasLogin=!is.null(logins)), 
+  shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin, 
+                      hasLogin=!is.null(logins)), 
            tinySEV.server(objects, uploadMaxSize, logins=logins, ...))
 }
 
@@ -32,14 +36,17 @@ tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL,
 #' intro page)
 #' @param skin The dashboard skin color, passed to 
 #'   \code{\link[shinydashboard]{dashboardPage}}.
+#' @param hasLogin Logical; whether login is required (credentials must also be
+#'   provided to the server function). Default FALSE.
 #'
 #' @return a shiny UI
 #' @export
-#' @import shiny shinydashboard shinyjqui waiter shinyauthr
+#' @import shiny shinydashboard shinyjqui waiter
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyjs useShinyjs
 #' @importFrom DT DTOutput
+#' @importFrom shinyauthr loginUI
 tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL, 
                        skin="blue", hasLogin=FALSE){
   if(is.null(waiterContent) || isTRUE(waiterContent)){

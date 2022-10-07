@@ -32,6 +32,10 @@ intro page)}
 
 \item{uploadMaxSize}{The maximum upload size. Set to zero to disable upload.}
 
+\item{logins}{An optional dataframe containing possible logins. Must contain 
+the columns "user" and "password_hash" (sodium-encoded). Not providing the
+argument disables login.}
+
 \item{...}{Passed to \code{\link{tinySEV.server}}}
 }
 \value{
