@@ -8,7 +8,8 @@ tinySEV.ui(
   title = "tinySEV",
   waiterContent = NULL,
   about = NULL,
-  skin = "blue"
+  skin = "blue",
+  hasLogin = FALSE
 )
 }
 \arguments{

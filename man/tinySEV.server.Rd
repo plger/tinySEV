@@ -8,8 +8,10 @@ tinySEV.server(
   objects = NULL,
   uploadMaxSize = 50 * 1024^2,
   maxPlot = 500,
-  genelists = list(),
-  genelistTab = length(genelists) > 0
+  feature.lists = list(),
+  filelist = list(),
+  logins = NULL,
+  feature.listsTab = length(feature.lists) > 0
 )
 }
 \arguments{
@@ -20,8 +22,17 @@ tinySEV.server(
 
 \item{maxPlot}{The maximum number of features to allow for plotting heatmaps.}
 
-\item{genelists}{An optional named list of genes/features which will be 
+\item{feature.lists}{An optional named list of genes/features which will be 
 flagged in the gene tab.}
+
+\item{filelist}{A named list of downloadable files optionally associated with
+elements of `objects`, or a folder where to find these files}
+
+\item{logins}{An optional dataframe containing possible logins. Must contain 
+the columns "user" and "password_hash" (sodium-encoded). Not providing the
+argument disables login.}
+
+\item{feature.listsTab}{Logical, whether to show the feature list tab}
 }
 \value{
 A shiny server function.

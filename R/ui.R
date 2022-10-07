@@ -17,10 +17,11 @@
 #' @export
 tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL, 
                     about=NULL, skin="blue", uploadMaxSize=50*1024^2, 
-                    ...){
-  shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin), 
-           tinySEV.server(objects, uploadMaxSize, ...))
+                    logins=NULL, ...){
+  shinyApp(tinySEV.ui(title, waiterContent, about, skin=skin, hasLogin=!is.null(logins)), 
+           tinySEV.server(objects, uploadMaxSize, logins=logins, ...))
 }
+
 
 #' tinySEV.ui
 #'
@@ -34,28 +35,30 @@ tinySEV <- function(objects=NULL, title="tinySEV", waiterContent=NULL,
 #'
 #' @return a shiny UI
 #' @export
-#' @import shiny shinydashboard shinyjqui waiter
+#' @import shiny shinydashboard shinyjqui waiter shinyauthr
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyjs useShinyjs
 #' @importFrom DT DTOutput
 tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL, 
-                       skin="blue"){
-  if(is.null(waiterContent) || isTRUE(waiterContent))
+                       skin="blue", hasLogin=FALSE){
+  if(is.null(waiterContent) || isTRUE(waiterContent)){
     waiterContent <- tagList(
       tags$h3("Please wait while the application is initialized..."), spin_1())
+  }
   if(isFALSE(waiterContent)){
     waiterContent <- NULL
   }else{
     waiterContent <- waiter_show_on_load(html=waiterContent)
   }
+  if(hasLogin) waiterContent <- tagList(shinyauthr::loginUI("login"))
   aboutMenu <- NULL
   if(!is.null(about)) aboutMenu <- menuItem("About", tabName="tab_about")
 
   shinyUI( dashboardPage(skin=skin,
     dashboardHeader(title=title, tags$li(class="dropdown",
         actionLink("quickStart", label="Quick start", icon=icon("question")))),
-    dashboardSidebar(
+    dashboardSidebar(collapsed=hasLogin, disable=hasLogin,
       sidebarMenu(id="main_tabs", aboutMenu,
         .modify_stop_propagation(
           menuItem("Object", startExpanded=TRUE,

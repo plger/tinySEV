@@ -9,10 +9,13 @@
 #' @param filelist A named list of downloadable files optionally associated with
 #'   elements of `objects`, or a folder where to find these files
 #' @param feature.listsTab Logical, whether to show the feature list tab
+#' @param logins An optional dataframe containing possible logins. Must contain 
+#'   the columns "user" and "password_hash" (sodium-encoded). Not providing the
+#'   argument disables login.
 #'
 #' @return A shiny server function.
 #' @export
-#' @import shiny ggplot2 SummarizedExperiment sechm waiter
+#' @import shiny ggplot2 SummarizedExperiment sechm waiter shinyauthr
 #' @importFrom plotly ggplotly renderPlotly event_data
 #' @importFrom shinydashboard updateTabItems
 #' @importFrom shinyjs showElement hideElement
@@ -20,7 +23,7 @@
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
-                           feature.lists=list(), filelist=list(),
+                           feature.lists=list(), filelist=list(), logins=NULL,
                            feature.listsTab=length(feature.lists)>0){
   options(shiny.maxRequestSize=uploadMaxSize)
 
@@ -81,6 +84,24 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
   function(input, output, session) {
 
+    if(!is.null(logins)){
+      credentials <- shinyauthr::loginServer(
+        id = "login",
+        data = logins,
+        user_col = user,
+        pwd_col = password_hash,
+        sodium_hashed = TRUE,
+      )
+    
+      observe({
+        if (credentials()$user_auth) {
+          shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+        } else {
+          shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+        }
+      })
+    }
+    
     output$uploadMenu <- renderUI({
       if(!(uploadMaxSize>0)) return(NULL)
       menuSubItem("Upload object", tabName="tab_fileinput")
@@ -102,6 +123,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     output$maxGenes <- renderText(maxPlot)
 
     SEinit <- function(x){
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(assayNames(x)))
         assayNames(x) <- paste0("assay",1:length(assays(x)))
       if(ncol(rowData(x))==0) rowData(x)$name <- row.names(x)
@@ -176,6 +198,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     ### Overview tabs
     
     output$SEout <- renderPrint({
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(SE())) return(NULL)
       print(SE())
       md <- metadata(SE())
@@ -189,22 +212,26 @@ Object metadata:
     })
     
     output$SEdescription <- renderText({
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(SE())) return(NULL)
       metadata(SE())$description
     })
     
     output$SEout2 <- renderText({
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(SE())) return("No object loaded")
       paste("A SummarizedExperiment with ", ncol(SE()), "samples, ",
             length(DEAs()), " differential expression analyses and ",
             length(EAs()), " enrichment analyses.")
     })
     output$fileout <- renderPrint({
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(SE())) return(NULL)
       print(SE())
     })
     
     output$SEfiles <- renderUI({
+      if(!is.null(logins)) req(credentials()$user_auth)
       if(is.null(input$object) || is.null(filelist) || 
          length(ff <- filelist[[input$object]])==0) return(NULL)
       lapply(ff, FUN=function(x){
@@ -565,7 +592,6 @@ Object metadata:
     observeEvent(input$help_hmtrim, showModal(.getHelp("scaletrim")))
     observeEvent(input$help_feature.lists, showModal(.getHelp("feature.lists")))
     
-    
-    waiter_hide()
+    if(is.null(logins)) waiter_hide()
   }
 }

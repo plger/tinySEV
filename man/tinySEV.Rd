@@ -11,7 +11,7 @@ tinySEV(
   about = NULL,
   skin = "blue",
   uploadMaxSize = 50 * 1024^2,
-  genelists = list(),
+  logins = NULL,
   ...
 )
 }
@@ -31,9 +31,6 @@ intro page)}
 \code{\link[shinydashboard]{dashboardPage}}.}
 
 \item{uploadMaxSize}{The maximum upload size. Set to zero to disable upload.}
-
-\item{genelists}{An optional named list of genes/features which will be 
-flagged in the gene tab}
 
 \item{...}{Passed to \code{\link{tinySEV.server}}}
 }
