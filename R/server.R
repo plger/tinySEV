@@ -484,7 +484,8 @@ Object metadata:
            assayName=input$assay_input2,
            sortRowsOn=srow, top_annotation=input$hm_anno, gaps_at=input$hm_gaps,
            cluster_cols=input$hm_clusterCol, cluster_rows=FALSE,
-           breaks=breaks), merge_legends=TRUE)
+           breaks=breaks), 
+           merge_legends=TRUE, padding=unit(c(0.2,0.2,1.5,0.2), "cm"))
 
     })
 
