@@ -101,6 +101,11 @@ grepGene <- function(x, g, ignore.case=TRUE){
   }
   x$FDR[is.na(x$FDR)] <- 1
   x <- x[!is.na(x$logFC),]
-  if(!is.null(x$PValue))  x <- x[!is.na(x$PValue),]
+  if(!is.null(x$PValue)){
+    x <- x[!is.na(x$PValue),]
+    x[order(x$PValue),]
+  }else{
+    x <- x[order(x$FDR),]
+  }
   x
 }

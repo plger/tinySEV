@@ -299,10 +299,7 @@ Object metadata:
     DEA <- reactive({
       if(is.null(input$dea) || input$dea=="" || is.null(DEAs()[[input$dea]]))
         return(NULL)
-      dea <- DEAs()[[input$dea]]
-      dea$FDR[is.na(dea$FDR)] <- 1
-      if(is.null(dea$PValue)) return(dea[order(dea$FDR),])
-      dea[order(dea$FDR, dea$PValue),]
+      DEAs()[[input$dea]]
     })
 
     observeEvent(input$dea_geneFilt, {
