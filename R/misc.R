@@ -72,3 +72,35 @@ grepGene <- function(x, g, ignore.case=TRUE){
   g <- grep(g, x, value=TRUE, ignore.case=ignore.case)
   return(unique(g))
 }
+
+
+.homogenizeDEA <- function(x, keepTop=TRUE){
+  x <- as.data.frame(x)
+  colnames(x) <- gsub("log2FoldChange|log2Fold|log2FC|log2\\(fold_change\\)|log2\\.fold_change\\.",
+                      "logFC", colnames(x))
+  
+  abf <- colnames(df)[which(colnames(df) %in% c("meanExpr", "AveExpr", 
+                                                "baseMean", "logCPM"))]
+  if (length(abf) == 1) {
+    x$meanExpr <- df[, abf]
+    if (abf == "baseMean") 
+      x$meanExpr <- log(x$meanExpr + 1)
+  }else if(all(c("value_1","value_2") %in% colnames(x))){ # cufflinks
+    x$meanExpr <- log(1+x$value_1+x$value_2)
+  }
+  colnames(x) <- gsub("P\\.Value|pvalue|p_value|pval", "PValue", colnames(x))
+  colnames(x) <- gsub("padj|adj\\.P\\.Val|q_value|qval", "FDR", colnames(x))
+  if (!("FDR" %in% colnames(x))) 
+    x$FDR <- p.adjust(x$PValue, method = "fdr")
+  f <- grep("^logFC$",colnames(x),value=TRUE)
+  if(length(f)==0) f <- grep("logFC",colnames(x),value=TRUE)
+  if(length(f)==0) warning("No logFC found.")
+  if(length(f)>1){
+    message("Using ",f[1])
+    x[["logFC"]] <- x[[f[1]]]
+  }
+  x$FDR[is.na(x$FDR)] <- 1
+  x <- x[!is.na(x$logFC),]
+  if(!is.null(x$PValue))  x <- x[!is.na(x$PValue),]
+  x
+}

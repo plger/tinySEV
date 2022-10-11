@@ -322,12 +322,14 @@ Object metadata:
 
     output$dea_overview <- renderText({
       if(is.null(dea <- DEA())) return(NULL)
+      dea <- .homogenizeDEA(dea)
       paste("A differential expression analysis across", sum(!is.na(dea$FDR)),
       "features, ", sum(dea$FDR<0.05, na.rm=TRUE), "of which are at FDR<0.05.")
     })
 
     output$dea_pvalues <- renderPlot({
       if(is.null(dea <- DEA())) return(NULL)
+      dea <- .homogenizeDEA(dea)
       hist(dea$PValue, xlab="Unadjusted p-values", main="")
     })
 
@@ -340,6 +342,7 @@ Object metadata:
 
     output$dea_volcano <- renderPlotly({
       if(is.null(dea <- DEA())) return(NULL)
+      dea <- .homogenizeDEA(dea)
       dea <- head(dea, 2000)
       if(is.null(dea$logFC))
         dea$logFC <- apply(
