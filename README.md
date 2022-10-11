@@ -75,7 +75,7 @@ The colors might not be particularly appropriate, and they will not be constant 
 the annotation colors. This can be done simply by adding a named list of (named) color vectors to `anno_colors` slot of the object's metadata:
 
 ```
-metadata(se)anno_colors <- list(genotype=c(WT="grey", mutant="red"))
+metadata(se)$anno_colors <- list(genotype=c(WT="grey", mutant="red"))
 ```
 
 The colors of the heatmap itself is different, and must be passed as its own metadata slot:
