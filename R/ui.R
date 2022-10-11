@@ -63,7 +63,9 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
   if(!is.null(about)) aboutMenu <- menuItem("About", tabName="tab_about")
 
   shinyUI( dashboardPage(skin=skin,
-    dashboardHeader(title=title, tags$li(class="dropdown",
+    dashboardHeader(title=title,
+      tags$li(class="dropdown", tags$a(as.character(packageVersion("tinySEV")))),
+      tags$li(class="dropdown",
         actionLink("quickStart", label="Quick start", icon=icon("question")))),
     dashboardSidebar(collapsed=hasLogin, disable=hasLogin,
       sidebarMenu(id="main_tabs", aboutMenu,
