@@ -96,14 +96,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
       "))),
       use_waiter(), useShinyjs(), waiterContent,
       tabItems(
-        tabItem("tab_object",
-                box(width=12, title="Object overview",
-                    tags$p(withSpinner(textOutput("SEdescription"))),
-                    tags$p(withSpinner(textOutput("SEout2"))),
-                    withSpinner(verbatimTextOutput("SEout"))),
-                box(width=12, title="Associated files",
-                    tags$ul(uiOutput("SEfiles"))
-                    )),
+        tabItem("tab_object", withSpinner(uiOutput("objOverview"))),
         tabItem("tab_fileinput",
           box(width=7, 
               tags$p("You may upload your own SummarizedExperiment (SE) object 

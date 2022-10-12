@@ -25,7 +25,7 @@
 #' @importFrom shinyauthr loginServer
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                            feature.lists=list(), filelist=list(), logins=NULL,
-                           feature.listsTab=length(feature.lists)>0){
+                           feature.listsTab=TRUE){
   options(shiny.maxRequestSize=uploadMaxSize)
 
   if(!is.null(objects) && is.null(names(objects))){
@@ -198,46 +198,30 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     ############
     ### Overview tabs
     
-    output$SEout <- renderPrint({
+    output$objOverview <- renderUI({
       if(!is.null(logins)) req(credentials()$user_auth)
-      if(is.null(SE())) return(NULL)
-      print(SE())
-      md <- metadata(SE())
-      if(length(md <- md[intersect(c("title","name","source"),
-                                   names(md))])>0){
-        cat("
-Object metadata:
-")
-        for(f in names(md)) cat(f, ": ", md[[f]], "\n")
+      if(is.null(SE())){
+        return(box(width=12, tags$p("No object loaded.")))
       }
-    })
-    
-    output$SEdescription <- renderText({
-      if(!is.null(logins)) req(credentials()$user_auth)
-      if(is.null(SE())) return(NULL)
-      metadata(SE())$description
-    })
-    
-    output$SEout2 <- renderText({
-      if(!is.null(logins)) req(credentials()$user_auth)
-      if(is.null(SE())) return("No object loaded")
-      paste("A SummarizedExperiment with ", ncol(SE()), "samples, ",
-            length(DEAs()), " differential expression analyses and ",
-            length(EAs()), " enrichment analyses.")
-    })
-    output$fileout <- renderPrint({
-      if(!is.null(logins)) req(credentials()$user_auth)
-      if(is.null(SE())) return(NULL)
-      print(SE())
-    })
-    
-    output$SEfiles <- renderUI({
-      if(!is.null(logins)) req(credentials()$user_auth)
-      if(is.null(input$object) || is.null(filelist) || 
-         length(ff <- filelist[[input$object]])==0) return(NULL)
-      lapply(ff, FUN=function(x){
-        tags$li(tags$a(href=x, basename(x), download=gsub(" ","_",basename(x))))
-      })
+      ff <- NULL
+      if(!is.null(filelist)) ff <- filelist[[input$object]]
+      md <- metadata(SE())
+      md <- md[intersect(c("title","name","source"),names(md))]
+      tagList(
+        box(width=12, title="Object overview",
+          tags$p(metadata(SE())$description),
+          tags$p(paste("A SummarizedExperiment with ", ncol(SE()), "samples, ",
+                       length(DEAs()), " differential expression analyses and ",
+                       length(EAs()), " enrichment analyses.")),
+          tags$ul(lapply(names(md), FUN=function(x){
+            tags$li(tags$b(x), tags$span(md[[x]]))
+            }))
+        ),
+        box(width=12, title="Associated files",
+          tags$ul(lapply(ff, FUN=function(x){
+            tags$li(tags$a(href=x, basename(x), download=gsub(" ","_",basename(x))))
+          })))
+      )
     })
 
     output$features <- renderDT({
