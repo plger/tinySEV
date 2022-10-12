@@ -1,13 +1,15 @@
 # tinySEV
 
-Simple shiny [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) Viewer
+Simple shiny [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) Viewer.
+
+While the examples below assume a transcriptomic dataset, this can equally well be applied to proteomics or epigenomics dataset -- or anything that can be squeezed in a SummarizedExperiment (SE).
 
 <br/><br/>
 
 ## Preparing SummarizedExperiment objects
 
 If you're not familiar with the SummarizedExperiment object structure, 
-[first consult that documentation].
+[first consult that documentation](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html).
 
 <br/><br/>
 
@@ -75,7 +77,7 @@ The colors might not be particularly appropriate, and they will not be constant 
 the annotation colors. This can be done simply by adding a named list of (named) color vectors to `anno_colors` slot of the object's metadata:
 
 ```
-metadata(se)anno_colors <- list(genotype=c(WT="grey", mutant="red"))
+metadata(se)$anno_colors <- list(genotype=c(WT="grey", mutant="red"))
 ```
 
 The colors of the heatmap itself is different, and must be passed as its own metadata slot:
@@ -98,3 +100,19 @@ metadata(se)$EA <- list( analysis1=df1, analysis2=df2 )
 
 The dataframes will be displayed as such and require no special formatting. However, if a column named 'genes' is present 
 (containing comma-separated lists of genes), it will be used to support extra functionalities (e.g. selecting members of a geneset for plotting).
+
+
+<br/><br/>
+
+### Including pre-defined lists of genes
+
+It is sometimes convenient to have pre-defined list of genes (e.g. differentially-expressed genes, genes from some publication, etc.) stored into the object, so that these can conveniently be plotted. Provided that the app was launched with the appropriate setting (`feature.listsTab=TRUE`), this can be done by storing a named list of genes in the `feature.lists` slot of the object's metadata, e.g.:
+
+```
+metadata(se)$feature.lists <- list(
+  "My genes of interest"=c("Ezh2", "Yy1", "Kdm1a"),
+  "Immediate early genes"=c("Fos","Fosb","Jun","Junb","Egr1")
+)
+```
+
+Naturally, the specified gene names must correspond to row.names of the object.
