@@ -11,7 +11,7 @@ tinySEV.server(
   feature.lists = list(),
   filelist = list(),
   logins = NULL,
-  feature.listsTab = length(feature.lists) > 0
+  feature.listsTab = TRUE
 )
 }
 \arguments{
