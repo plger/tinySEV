@@ -103,7 +103,7 @@ grepGene <- function(x, g, ignore.case=TRUE){
   x <- x[!is.na(x$logFC),]
   if(!is.null(x$PValue)){
     x <- x[!is.na(x$PValue),]
-    x[order(x$PValue),]
+    x <- x[order(x$PValue),]
   }else{
     x <- x[order(x$FDR),]
   }
