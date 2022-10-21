@@ -74,17 +74,18 @@ grepGene <- function(x, g, ignore.case=TRUE){
 }
 
 
-.homogenizeDEA <- function(x, keepTop=TRUE){
-  x <- as.data.frame(x)
+
+.homogenizeDEA <- function(x){
+  if(is(x,"data.table") || is(x, "DFrame")) x <- as.data.frame(x)
+  if(!is.data.frame(x)) return(NULL)
   colnames(x) <- gsub("log2FoldChange|log2Fold|log2FC|log2\\(fold_change\\)|log2\\.fold_change\\.",
                       "logFC", colnames(x))
   
-  abf <- colnames(df)[which(colnames(df) %in% c("meanExpr", "AveExpr", 
-                                                "baseMean", "logCPM"))]
-  if (length(abf) == 1) {
-    x$meanExpr <- df[, abf]
-    if (abf == "baseMean") 
-      x$meanExpr <- log(x$meanExpr + 1)
+  abf <- head(intersect(colnames(x),
+                        c("logCPM", "meanExpr", "AveExpr", "baseMean")), 1)
+  if (length(abf)==1){
+    x$meanExpr <- x[, abf]
+    if(abf == "baseMean") x$meanExpr <- log1p(x$meanExpr)
   }else if(all(c("value_1","value_2") %in% colnames(x))){ # cufflinks
     x$meanExpr <- log(1+x$value_1+x$value_2)
   }
