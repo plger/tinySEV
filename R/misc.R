@@ -99,6 +99,7 @@ grepGene <- function(x, g, ignore.case=TRUE){
     message("Using ",f[1])
     x[["logFC"]] <- x[[f[1]]]
   }
+  x$F <- NULL
   x$FDR[is.na(x$FDR)] <- 1
   x <- x[!is.na(x$logFC),]
   if(!is.null(x$PValue)){

@@ -316,6 +316,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
     output$dea_table <- renderDT({
       if(is.null(dea <- DEA())) return(NULL)
+      dea <- .homogenizeDEA(dea)
       datatable( dround(as.data.frame(dea), digits=3, roundGreaterThan1=TRUE),
                  filter="top", class="compact", extensions=c("ColReorder"),
                  options=list( pageLength=30, dom = "fltBip" ) )
