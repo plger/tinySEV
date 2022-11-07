@@ -283,7 +283,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     DEA <- reactive({
       if(is.null(input$dea) || input$dea=="" || is.null(DEAs()[[input$dea]]))
         return(NULL)
-      DEAs()[[input$dea]]
+      .homogenizeDEA(DEAs()[[input$dea]])
     })
 
     observeEvent(input$dea_geneFilt, {
@@ -303,20 +303,17 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
     output$dea_overview <- renderText({
       if(is.null(dea <- DEA())) return(NULL)
-      dea <- .homogenizeDEA(dea)
       paste("A differential expression analysis across", sum(!is.na(dea$FDR)),
       "features, ", sum(dea$FDR<0.05, na.rm=TRUE), "of which are at FDR<0.05.")
     })
 
     output$dea_pvalues <- renderPlot({
       if(is.null(dea <- DEA())) return(NULL)
-      dea <- .homogenizeDEA(dea)
       hist(dea$PValue, xlab="Unadjusted p-values", main="")
     })
 
     output$dea_table <- renderDT({
       if(is.null(dea <- DEA())) return(NULL)
-      dea <- .homogenizeDEA(dea)
       datatable( dround(as.data.frame(dea), digits=3, roundGreaterThan1=TRUE),
                  filter="top", class="compact", extensions=c("ColReorder"),
                  options=list( pageLength=30, dom = "fltBip" ) )
@@ -324,7 +321,6 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
     output$dea_volcano <- renderPlotly({
       if(is.null(dea <- DEA())) return(NULL)
-      dea <- .homogenizeDEA(dea)
       dea <- head(dea, 2000)
       if(is.null(dea$logFC))
         dea$logFC <- apply(

@@ -1,7 +1,7 @@
 Package: tinySEV
 Type: Package
 Title: Tiny Summarized Experiment Viewer
-Version: 0.1.13
+Version: 0.1.14
 Author: Pierre-Luc Germain <pierre-luc.germain@hest.ethz.ch>
 Maintainer: Pierre-Luc Germain <pierre-luc.germain@hest.ethz.ch>
 Description: Shiny application to plot genes and genesets from a Summarized Experiment,
