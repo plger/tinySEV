@@ -462,7 +462,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                ignore.case=TRUE) || input$hm_scale)
         breaks <- 1-(input$hm_breaks/100)
       draw(sechm(se, g, do.scale=input$hm_scale,
-           assayName=input$assay_input2,
+           assayName=input$assay_input2, show_colnames=input$hm_showColnames,
            sortRowsOn=srow, top_annotation=input$hm_anno, gaps_at=input$hm_gaps,
            cluster_cols=input$hm_clusterCol, cluster_rows=FALSE,
            breaks=breaks), 

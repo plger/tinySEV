@@ -188,6 +188,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                   ),
                   column(4, selectizeInput('hm_order', "Column ordering", choices=c(), multiple=TRUE),
                          checkboxInput('hm_clusterCol','Cluster columns', value=FALSE),
+                         checkboxInput('hm_showColnames','Column names', value=FALSE),
                          checkboxInput('hm_clusterRow','Sort rows', value=TRUE)
                   )
              ),
