@@ -485,7 +485,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     })
     
     output$gene_plot <- renderPlot({
-      d <- tryCatch(SEtools::meltSE(SE(), selGene()),
+      d <- tryCatch(meltSE(SE(), selGene()),
                     error=function(x){ NULL })
       validate( need(!is.null(d) && nrow(d)>0,
                      message=paste("No gene selected. Select one in the ",
