@@ -64,14 +64,21 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
 
   shinyUI( dashboardPage(skin=skin,
     dashboardHeader(title=title,
-      tags$li(class="dropdown", tags$a(as.character(packageVersion("tinySEV")))),
       tags$li(class="dropdown",
-        actionLink("quickStart", label="Quick start", icon=icon("question")))),
+              actionLink("quickStart", label="Quick start", icon=icon("question")),
+              style="float: right; width: 112px;"),
+      tags$li(class = "dropdown",
+              tags$div("Object: ", style="margin: 10px; font-weight: bold; font-size: 16px; color: #fff; float: left;"),
+                      div(
+                selectInput("object", label=NULL, choices=c(), selectize=FALSE, width = "100%"),
+                style= "width: 80%; margin: 5px auto; display: block; float: left;"),
+              div(" "),
+              style="width: 80%; display: block;")
+      ),
     dashboardSidebar(collapsed=hasLogin, disable=hasLogin,
       sidebarMenu(id="main_tabs", aboutMenu,
         .modify_stop_propagation(
           menuItem("Object", startExpanded=TRUE,
-             selectInput("object", label=NULL, choices=c()),
              menuSubItem("Overview", tabName="tab_object"),
              menuSubItem("Samples", tabName="tab_samples"),
              menuSubItem("Features", tabName="tab_features"),
@@ -85,13 +92,28 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
           menuSubItem("Genes", tabName="tab_hm_genes"),
           menuSubItem("Heatmap", tabName="tab_heatmap")
         )),
-        menuItemOutput("menu_genelist")
+        menuItemOutput("menu_genelist"),
+        tags$li(class="shinydashboard-menu-output pkgversion",
+                tags$span(as.character(packageVersion("tinySEV"))))
       )
     ),
     dashboardBody(
       tags$head(tags$style(HTML("
         .sidebar-menu li.treeview, .sidebar-menu li.treeview:hover a{
         	background-color: #2c3b41;
+        }
+        .navbar-custom-menu {
+          width: 90%;
+          display: block;
+        }
+        .navbar-custom-menu .navbar-nav {
+          width: 100%;
+          display: block;
+        }
+        li.pkgversion {
+          margin-top: 50px;
+          margin-left: 15px;
+          color: #b8c7ce;
         }
       "))),
       use_waiter(), useShinyjs(), waiterContent,
