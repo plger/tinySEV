@@ -203,8 +203,11 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(is.null(SE())){
         return(box(width=12, tags$p("No object loaded.")))
       }
-      ff <- NULL
+      desImg <- ff <- NULL
       if(!is.null(filelist)) ff <- filelist[[input$object]]
+      if(length(wDes <- which(basename(ff)=="design.png"))>0){
+        desImg <- tags$img(src=ff[[head(wDes,1)]])
+      }
       md <- metadata(SE())
       md <- md[intersect(c("title","name","source"),names(md))]
       tagList(
@@ -215,7 +218,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                        length(EAs()), " enrichment analyses.")),
           tags$ul(lapply(names(md), FUN=function(x){
             tags$li(tags$b(x), tags$span(md[[x]]))
-            }))
+            })),
+          tags$p(desImg)
         ),
         box(width=12, title="Associated files",
           tags$ul(lapply(ff, FUN=function(x){
