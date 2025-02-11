@@ -23,6 +23,7 @@
 #' @importFrom ComplexHeatmap draw
 #' @importFrom S4Vectors metadata
 #' @importFrom shinyauthr loginServer
+#' @importFrom ggbeeswarm geom_beeswarm
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                            feature.lists=list(), filelist=list(), logins=NULL,
                            feature.listsTab=TRUE){
@@ -508,7 +509,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
         p <- p + geom_boxplot(outlier.shape = NA)
       }
       if(input$select_plotpoints)
-        p <- p + geom_point(position = position_jitterdodge(dodge.width=0.4))
+        p <- p + geom_beeswarm(dodge.width=1, cex=1.4, size=2)
       p <- p + theme_classic() + ggtitle(input$gene_input) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
