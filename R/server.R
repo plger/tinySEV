@@ -315,7 +315,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     })
 
     output$dea_pvalues <- renderPlot({
-      if(is.null(dea <- DEA())) return(NULL)
+      if(is.null(dea <- DEA()) || is.null(dea$PValue)) return(NULL)
       hist(dea$PValue, xlab="Unadjusted p-values", main="")
     })
 
@@ -328,11 +328,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
     output$dea_volcano <- renderPlotly({
       if(is.null(dea <- DEA())) return(NULL)
+      if(!is.null(dea$logFC)) return(NULL)
       dea <- head(dea, 2000)
-      if(is.null(dea$logFC))
-        dea$logFC <- apply(
-          as.matrix(dea[,grep("logFC|log2FC",colnames(dea)),drop=FALSE]), 1,
-          FUN=function(x) x[which.max(abs(x))])
       if(is.null(dea$MeanExpr)){
         if(!is.null(dea$logCPM)) dea$MeanExpr <- dea$logCPM
         if(!is.null(dea$baseMean)) dea$MeanExpr <- dea$baseMean
@@ -502,23 +499,18 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       validate( need(nrow(d)>0, message="No sample selected!") )
       gr <- input$select_groupvar
       if(input$asfactor) d[[gr]] <- factor(d[[gr]])
-      if(input$select_plotpoints){
-        p <- ggplot(d, aes_string(input$select_groupvar, input$assay_input,
-                                  colour=input$select_colorvar))
-      }else{
-        p <- ggplot(d, aes_string(input$select_groupvar, input$assay_input,
-                                  fill=input$select_colorvar))
-      }
+      p <- ggplot(d, aes_string(input$select_groupvar, input$assay_input,
+                                  colour=input$select_colorvar,
+                                fill=input$select_colorvar))
       if(input$plottype_input=="violin plot"){
         p <- p + geom_violin()
       }else{
         p <- p + geom_boxplot(outlier.shape = NA)
       }
       if(input$select_plotpoints)
-        p <- p + geom_point(position = position_jitterdodge())
+        p <- p + geom_point(position = position_jitterdodge(dodge.width=0.4))
       p <- p + theme_classic() + ggtitle(input$gene_input) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 
       if(!is.null(input$select_gridvars)){
         form <- as.formula(paste0("~",paste(input$select_gridvars, collapse="+")))
@@ -528,7 +520,26 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
           p <- p + facet_wrap(form)
         }
       }
+      
+      if(input$select_colorvar %in% names(metadata(SE())$anno_colors)){
+        cols <- metadata(SE())$anno_colors[[input$select_colorvar]]
+        p <- p + scale_color_manual(values=cols) + 
+          scale_fill_manual(values=setNames(maketrans(cols),names(cols)))
+      }
+      
       p + ggtitle(selGene())
+    })
+    
+    output$gene_dea_table <- renderTable({
+      if(is.null(selGene())) return(NULL)
+      if(is.null(deas <- DEAs()) || length(deas)==0) return(NULL)
+      d <- dplyr::bind_rows(lapply(deas, FUN=function(x){
+        .homogenizeDEA(x[selGene(),])
+      }), .id="Comparison")
+      d <- d[!is.na(d$FDR),]
+      if(nrow(d)==0) return(NULL)
+      row.names(d) <- NULL
+      d
     })
     
     output$gene_inList <- renderText({

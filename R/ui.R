@@ -178,7 +178,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
                             tags$span("Free axes ", actionLink("help_gfreeaxes", "[?]"))))
           ),
           box(width=12, withSpinner(shinyjqui::jqui_resizable(plotOutput("gene_plot")))),
-          box(width=12, withSpinner(shiny::verbatimTextOutput("gene_inList")))
+          box(width=12, withSpinner(tableOutput("gene_dea_table"))),
+          tags$p(shiny::verbatimTextOutput("gene_inList"))
         ),
         tabItem("tab_hm_genes", box(width=12, title="Select genes to plot",
           textAreaInput('input_genes','Genes to plot', width="90%", rows=10,

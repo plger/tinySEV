@@ -75,13 +75,13 @@ grepGene <- function(x, g, ignore.case=TRUE){
 
 
 
-.homogenizeDEA <- function(x){
+.homogenizeDEA <- function(x, doWarn=FALSE){
   if(is(x,"data.table") || is(x, "DFrame")) x <- as.data.frame(x)
   if(!is.data.frame(x)) return(NULL)
-  colnames(x) <- gsub("log2FoldChange|log2Fold|log2FC|log2\\(fold_change\\)|log2\\.fold_change\\.",
-                      "logFC", colnames(x))
+  x <- .renameCol(x,c("^log2FoldChange$|^log2Fold|^log2FC$",
+                      "log2\\(fold_change\\)|log2\\.fold_change\\."), "logFC")
   if(!any(colnames(x)=="logFC") & (length(w <- grep("logFC",colnames(x)))>0)){
-    x$logFC <- rowMeans(as.matrix(x[,w,drop=FALSE]))
+    x$logFC <- rowMeans(as.matrix(x[,w,drop=FALSE]), na.rm = TRUE)
   }
   
   abf <- head(intersect(colnames(x),
@@ -92,26 +92,35 @@ grepGene <- function(x, g, ignore.case=TRUE){
   }else if(all(c("value_1","value_2") %in% colnames(x))){ # cufflinks
     x$meanExpr <- log(1+x$value_1+x$value_2)
   }
-  colnames(x) <- gsub("P\\.Value|pvalue|p_value|pval|p_val", "PValue", colnames(x))
-  colnames(x) <- gsub("padj|adj\\.P\\.Val|q_value|qval|p_adj\\.loc", "FDR", colnames(x))
-  if (!("FDR" %in% colnames(x))) colnames(x) <- gsub("ihw", "FDR", colnames(x))
+  x <- .renameCol(x,c("^P\\.Value$|^pvalue$|^p_value$|^pval|^p_val","pval"),"PValue")
+  x <- .renameCol(x,c("^ihw","^padj|^adj\\.P\\.Val|^q_value","^qval|^p_adj|^padj"), "FDR")
   if (!("FDR" %in% colnames(x)))
     x$FDR <- p.adjust(x$PValue, method = "fdr")
   f <- grep("^logFC$",colnames(x),value=TRUE)
-  if(length(f)==0) f <- grep("logFC",colnames(x),value=TRUE)
-  if(length(f)==0) warning("No logFC found.")
-  if(length(f)>1){
-    message("Using ",f[1])
-    x[["logFC"]] <- x[[f[1]]]
-  }
   x$F <- NULL
   x$FDR[is.na(x$FDR)] <- 1
-  x <- x[!is.na(x$logFC),]
+  if(!is.null(x$logFC)) x <- x[!is.na(x$logFC),]
   if(!is.null(x$PValue)){
     x <- x[!is.na(x$PValue),]
     x <- x[order(x$PValue),]
   }else{
     x <- x[order(x$FDR),]
   }
+  x[!is.na(x$FDR),]
+}
+
+.renameCol <- function(x, patterns, newName){
+  i <- 1L
+  while(i<=length(patterns) && !(newName %in% colnames(x))){
+    w <- head(grep(patterns[i], colnames(x)),1)
+    if(length(w)>0) x[[newName]] <- x[[w]]
+    i <- i+1L
+  }
   x
+}
+
+maketrans <- function(tcol, alpha = 100){
+  c <- col2rgb(tcol)
+  rgb(c["red", 1][[1]], c["green", 1][[1]], c["blue", 1][[1]], 
+      alpha, maxColorValue = 255)
 }
