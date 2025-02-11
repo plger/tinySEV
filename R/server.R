@@ -150,8 +150,11 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       updateSelectInput(session, "select_gridvars", choices=colvars,
                         selected=getDef(x, "gridvar"))
       x <- mergeFlists(x)
-      updateSelectInput(session, "genelist_input",
-                        choices=names(metadata(x)$feature.lists))
+      if(length(sefl <- names(metadata(x)$feature.lists))==0){
+        updateSelectInput(session, "genelist_input", choices="")
+      }else{
+        updateSelectInput(session, "genelist_input", choices=sefl)
+      }
       if(!is.null(getDef(x, "assay")))
         updateCheckboxInput(session, "hm_scale",
                             value=!grepl("FC$",getDef(x, "assay")))
