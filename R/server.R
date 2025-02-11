@@ -542,8 +542,9 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
         .homogenizeDEA(x[selGene(),])
       }), .id="Comparison")
       d <- d[!is.na(d$FDR),]
-      if(nrow(d)==0) return(NULL)
       if(!is.null(d$logCPM)) d$meanExpr <- NULL
+      if(!is.null(d$logFC)) d <- d[!is.na(d$logFC),]
+      if(nrow(d)==0) return(NULL)
       row.names(d) <- NULL
       d
     })
