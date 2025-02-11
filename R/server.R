@@ -523,8 +523,9 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       
       if(input$select_colorvar %in% names(metadata(SE())$anno_colors)){
         cols <- metadata(SE())$anno_colors[[input$select_colorvar]]
+        cols2 <- sapply(cols, maketrans)
         p <- p + scale_color_manual(values=cols) + 
-          scale_fill_manual(values=setNames(maketrans(cols),names(cols)))
+          scale_fill_manual(values=cols2)
       }
       
       p + ggtitle(selGene())
@@ -538,6 +539,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       }), .id="Comparison")
       d <- d[!is.na(d$FDR),]
       if(nrow(d)==0) return(NULL)
+      if(!is.null(d$logCPM)) d$meanExpr <- NULL
       row.names(d) <- NULL
       d
     })
