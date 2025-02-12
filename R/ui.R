@@ -94,7 +94,8 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
         )),
         menuItemOutput("menu_genelist"),
         tags$li(class="shinydashboard-menu-output pkgversion",
-                tags$span("tinySEV v",as.character(packageVersion("tinySEV"))))
+                tags$span(paste0("tinySEV v",
+                                 as.character(packageVersion("tinySEV")))))
       )
     ),
     dashboardBody(
