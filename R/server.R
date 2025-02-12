@@ -86,6 +86,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
   function(input, output, session) {
 
+    previous_sel <- reactiveVal(value=NULL)
+    
     if(!is.null(logins)){
       credentials <- shinyauthr::loginServer(
         id = "login",
@@ -210,10 +212,10 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       desImg <- ""
       ff <- NULL
       if(!is.null(filelist) && length(filelist[[input$object]])>0){
-	ff <- filelist[[input$object]]
-	if(length(wDes <- which(basename(ff)=="design.png"))>0){
-          desImg <- tags$img(src=gsub("^www/","",ff[[head(wDes,1)]]))
-	}
+      	ff <- filelist[[input$object]]
+      	if(length(wDes <- which(basename(ff)=="design.png"))>0){
+                desImg <- tags$img(src=gsub("^www/","",ff[[head(wDes,1)]]))
+      	}
       }
       md <- metadata(SE())
       md <- md[intersect(c("title","name","source"),names(md))]
@@ -297,6 +299,14 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       .homogenizeDEA(DEAs()[[input$dea]])
     })
 
+    observeEvent(input$dea, {
+      if(!is.null(input$dea) && input$dea != ""){
+        if(!is.null(previous_sel()))
+          updateTabItems(session, "main_tabs", selected="tab_object")
+        previous_sel(input$dea)
+      }
+    })
+    
     observeEvent(input$dea_geneFilt, {
       if(length(g <- input$dea_table_rows_all)>0){
         g <- row.names(DEA())[head(g,maxPlot)]
@@ -332,19 +342,20 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
 
     output$dea_volcano <- renderPlotly({
       if(is.null(dea <- DEA())) return(NULL)
-      if(!is.null(dea$logFC)) return(NULL)
+      if(is.null(dea$logFC)) return(NULL)
       dea <- head(dea, 2000)
+      dea <- dround(as.data.frame(dea), digits=3, roundGreaterThan1=TRUE)
+      dea$logFC <- round(dea$logFC,2)
       if(is.null(dea$MeanExpr)){
         if(!is.null(dea$logCPM)) dea$MeanExpr <- dea$logCPM
         if(!is.null(dea$baseMean)) dea$MeanExpr <- dea$baseMean
       }
       dea$feature <- row.names(dea)
       if(is.null(dea$MeanExpr)){
-        p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR,
-                             PValue=PValue))
+        p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR))
       }else{
         p <- ggplot(dea, aes(logFC, -log10(FDR), Feature=feature, FDR=FDR,
-                             PValue=PValue, MeanExpr=MeanExpr, colour=MeanExpr))
+                             MeanExpr=MeanExpr, colour=MeanExpr))
       }
       p <- p + geom_vline(xintercept=0, linetype="dashed") + geom_point() +
         theme_classic()
@@ -506,6 +517,9 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       p <- ggplot(d, aes_string(input$select_groupvar, input$assay_input,
                                   colour=input$select_colorvar,
                                 fill=input$select_colorvar))
+      if(grepl("logFC|log2FC|scaledLFC", input$assay_input)){
+        p <- p + geom_hline(yintercept=0, linetype="dashed", colour="grey")
+      }
       if(input$plottype_input=="violin plot"){
         p <- p + geom_violin()
       }else{
@@ -542,6 +556,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
         .homogenizeDEA(x[selGene(),])
       }), .id="Comparison")
       d <- d[!is.na(d$FDR),]
+      d$LR <- NULL
       if(!is.null(d$logCPM)) d$meanExpr <- NULL
       if(!is.null(d$logFC)) d <- d[!is.na(d$logFC),]
       if(nrow(d)==0) return(NULL)
@@ -557,8 +572,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       x <- which(sapply(flists(), FUN=function(x){ any(g %in% x) }))
       if(length(x)==0)
         return("This feature is included in none of the registered lists.")
-      out <- "This feature is included in the following list(s):\n"
-      paste(out, names(flists())[x], collapse="\n")
+      out <- "This feature is included in the following list(s):"
+      paste(c(out, names(flists())[x]), collapse="\n")
     })
     
 
