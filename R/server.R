@@ -561,8 +561,12 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(!is.null(d$logCPM)) d$meanExpr <- NULL
       if(!is.null(d$logFC)) d <- d[!is.na(d$logFC),]
       if(nrow(d)==0) return(NULL)
-      dea_desc <- sapply(deas, FUN=attr, which="description")
-      dea_desc[sapply(is.null(dea_desc))] <- ""
+      dea_desc <- sapply(deas, FUN=\(x){
+        a <- attr(x, which="description")
+        if(is.null(a)) return("")
+        as.character(a[1])
+      })
+      dea_desc[sapply(dea_desc,is.null)] <- ""
       if(any(dea_desc != "")){
         d$test_description <- dea_desc[d$Comparison]
       }
