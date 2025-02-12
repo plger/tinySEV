@@ -214,7 +214,8 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(!is.null(filelist) && length(filelist[[input$object]])>0){
       	ff <- filelist[[input$object]]
       	if(length(wDes <- which(basename(ff)=="design.png"))>0){
-                desImg <- tags$img(src=gsub("^www/","",ff[[head(wDes,1)]]))
+          desImg <- tags$img(src=gsub("^www/","",ff[[head(wDes,1)]]))
+          ff <- ff[-head(wDes,1)]
       	}
       }
       md <- metadata(SE())
