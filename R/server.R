@@ -299,11 +299,11 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       .homogenizeDEA(DEAs()[[input$dea]])
     })
 
-    observeEvent(input$dea, {
-      if(!is.null(input$dea) && input$dea != ""){
+    observeEvent(input$object, {
+      if(!is.null(input$object) && input$object != "" && input$main_tabs=="tab_about"){
         if(!is.null(previous_sel()))
           updateTabItems(session, "main_tabs", selected="tab_object")
-        previous_sel(input$dea)
+        previous_sel(input$object)
       }
     })
     
