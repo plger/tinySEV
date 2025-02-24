@@ -526,8 +526,11 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       }else{
         p <- p + geom_boxplot(outlier.shape = NA)
       }
-      if(input$select_plotpoints)
+      if(input$select_plotpoints){
         p <- p + geom_beeswarm(dodge.width=1, cex=1.4, size=2)
+      }else{
+        p <- p + stat_summary()
+      }
       p <- p + theme_classic() + ggtitle(input$gene_input) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -561,7 +564,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(!is.null(d$logCPM)) d$meanExpr <- NULL
       if(!is.null(d$logFC)) d <- d[!is.na(d$logFC),]
       if(nrow(d)==0) return(NULL)
-      dea_desc <- sapply(deas, FUN=\(x){
+      dea_desc <- sapply(deas, FUN=funciton(x){
         a <- attr(x, which="description")
         if(is.null(a)) return("")
         as.character(a[1])

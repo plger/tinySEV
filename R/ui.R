@@ -180,7 +180,7 @@ tinySEV.ui <- function(title="tinySEV", waiterContent=NULL, about=NULL,
           ),
           box(width=12, withSpinner(shinyjqui::jqui_resizable(plotOutput("gene_plot")))),
           box(width=8, withSpinner(tableOutput("gene_dea_table"))),
-          column(width=3, shiny::verbatimTextOutput("gene_inList"))
+          column(width=4, shiny::verbatimTextOutput("gene_inList"))
         ),
         tabItem("tab_hm_genes", box(width=12, title="Select genes to plot",
           textAreaInput('input_genes','Genes to plot', width="90%", rows=10,
