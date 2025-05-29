@@ -116,3 +116,18 @@ metadata(se)$feature.lists <- list(
 ```
 
 Naturally, the specified gene names must correspond to row.names of the object.
+
+<br/><br/>
+
+### Using out-of-memory DelayedArray for large objects
+
+tinySEV is compatible with SummarizedExperiments containing out-of-memory HDF5 assays as prepared by the HDF5Array package.
+Since queries are typically per row, we recommend chunking rows. For example, you could save your SE object (here `se`) as follows:
+
+```
+library(HDF5Array)
+saveHDF5SummarizedExperiment(se, dir="path/to/directory", prefix="myDataset.",
+                             level=1, chunkdim=c(1, ncol(se)))
+```
+
+(Note that we provide a prefix ending in a dot, so that the rds file will be named `myDataset.se.rds`, as is necessary for the files to be automatically recognized.)

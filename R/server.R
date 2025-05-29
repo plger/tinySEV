@@ -24,6 +24,7 @@
 #' @importFrom S4Vectors metadata
 #' @importFrom shinyauthr loginServer
 #' @importFrom ggbeeswarm geom_beeswarm
+#' @importFrom HDF5Array loadHDF5SummarizedExperiment
 tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
                            feature.lists=list(), filelist=list(), logins=NULL,
                            feature.listsTab=TRUE){
@@ -171,8 +172,15 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
     SE <- reactive({
       if(is.null(input$object) || input$object=="" ||
          is.null(SEs[[input$object]])) return(NULL)
-      if(is.character(SEs[[input$object]]))
-        SEs[[input$object]] <- readRDS(SEs[[input$object]])
+      if(is.character(fp <- SEs[[input$object]])){
+        base <- gsub("\\.se\\.rds", "", fp, ignore.case=TRUE)
+        if(file.exists(paste0(base, "assays.h5"))){
+          SEs[[input$object]] <- loadHDF5SummarizedExperiment(dirname(fp),
+                                                              prefix=basename(base))
+        }else{
+          SEs[[input$object]] <- readRDS(SEs[[input$object]])
+        }
+      }
       SEinit(SEs[[input$object]])
     })
     
