@@ -17,7 +17,10 @@ tinySEV(
 }
 \arguments{
 \item{objects}{A named list of (paths to)
-\code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects}
+\code{\link[SummarizedExperiment]{SummarizedExperiment-class}} objects.
+Note that when referring to a HDF5 SE (e.g. saved through 
+\code{\link[HDF5Array]{saveHDF5SummarizedExperiment}} or 
+\code{\link{convert2h5se}}), the path should refer to the `rds` file.}
 
 \item{title}{The title of the app (displayed in the header)}
 

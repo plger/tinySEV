@@ -124,3 +124,27 @@ maketrans <- function(tcol, alpha = 100){
   rgb(c["red", 1][[1]], c["green", 1][[1]], c["blue", 1][[1]], 
       alpha, maxColorValue = 255)
 }
+
+
+#' convert2h5se
+#'
+#' @param input A SummarizedExperiment object, or the path to a saved 
+#'   serialization of such an object (i.e. rds file).
+#' @param outputPath The output folder and prefix for the h5SE.
+#' @param compression The compression level to use.
+#'
+#' @return An invisible H5 SummarizedExperiment object.
+#' @export
+convert2h5se <- function(input, outputPath, compression=1L){
+  if(is.character(input)){
+    stopifnot(length(input)==1)
+    stopifnot(grepl("rds$", input, ignore.case=TRUE) && file.exists(input))
+    input <- readRDS(input)
+  }
+  stopifnot(inherits(input, "SummarizedExperiment"))
+  p <- basename(outputPath)
+  p <- gsub("\\.\\.$", ".", paste0(p,"."))
+  saveHDF5SummarizedExperiment(input, dir=dirname(outputPath),
+                               prefix=p, level=compression,
+                               chunkdim=c(1L, ncol(input)))
+}
