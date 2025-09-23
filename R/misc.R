@@ -134,6 +134,7 @@ maketrans <- function(tcol, alpha = 100){
 #' @param compression The compression level to use.
 #'
 #' @return An invisible H5 SummarizedExperiment object.
+#\ @importFrom HDF5Array saveHDF5SummarizedExperiment
 #' @export
 convert2h5se <- function(input, outputPath, compression=1L){
   if(is.character(input)){
