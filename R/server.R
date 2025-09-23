@@ -173,7 +173,7 @@ tinySEV.server <- function(objects=NULL, uploadMaxSize=50*1024^2, maxPlot=500,
       if(is.null(input$object) || input$object=="" ||
          is.null(SEs[[input$object]])) return(NULL)
       if(is.character(fp <- SEs[[input$object]])){
-        base <- gsub("\\.se\\.rds", "", fp, ignore.case=TRUE)
+        base <- gsub("\\.se\\.rds", ".", fp, ignore.case=TRUE)
         if(file.exists(paste0(base, "assays.h5"))){
           SEs[[input$object]] <- loadHDF5SummarizedExperiment(dirname(fp),
                                                               prefix=basename(base))
