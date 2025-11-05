@@ -1,6 +1,8 @@
 # tinySEV
 
-Simple shiny [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) Viewer.
+Simple shiny [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) (SE) Viewer, especially suited for presenting many SE objects.
+
+Check [here](https://www.ethz-ins.org/stressome2/) for a live example.
 
 While the examples below assume a transcriptomic dataset, this can equally well be applied to proteomics or epigenomics dataset -- or anything that can be squeezed in a SummarizedExperiment (SE).
 
